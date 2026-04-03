@@ -1,0 +1,11 @@
+{
+  "pck_name": "ClassicMode",
+  "id": "ClassicMode",
+  "name": "Classic Mode",
+  "author": "Boninall",
+  "description": "Play STS2 characters with STS1 card pools and relic pools. Toggle Classic Cards and Classic Relics independently on the character select screen.",
+  "version": "0.1.1",
+  "has_pck": true,
+  "has_dll": true,
+  "affects_gameplay": true
+}

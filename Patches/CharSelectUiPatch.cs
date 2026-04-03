@@ -1,0 +1,274 @@
+using Godot;
+using HarmonyLib;
+using MegaCrit.Sts2.Core.Commands;
+using MegaCrit.Sts2.Core.Helpers;
+using MegaCrit.Sts2.Core.Logging;
+using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.Characters;
+using MegaCrit.Sts2.Core.Nodes.Screens.CharacterSelect;
+
+namespace ClassicModeMod;
+
+/// <summary>
+/// Injects Classic Mode toggle panel on the character select screen.
+/// Only visible when Ironclad, Silent, or Defect is selected.
+/// Mimics the game's NTickbox styling with hover/press animations and SFX.
+/// </summary>
+internal static class ClassicModePanel
+{
+    private static PanelContainer? _root;
+    private static TickboxRow? _cardsRow;
+    private static TickboxRow? _relicsRow;
+
+    internal static bool Exists => _root != null && GodotObject.IsInstanceValid(_root);
+
+    private static bool IsClassicCharacter(CharacterModel? c) => c is Ironclad or Silent or Defect;
+
+    internal static void Inject(Control screen)
+    {
+        if (Exists) return;
+        _root = BuildPanel();
+        screen.AddChild(_root);
+        _root.Visible = false;
+    }
+
+    internal static void Remove()
+    {
+        if (_root != null && GodotObject.IsInstanceValid(_root))
+            _root.QueueFree();
+        _root = null;
+        _cardsRow = null;
+        _relicsRow = null;
+    }
+
+    internal static void OnCharacterSelected(CharacterModel? character)
+    {
+        if (!Exists || _root == null) return;
+        _root.Visible = IsClassicCharacter(character);
+    }
+
+    private static PanelContainer BuildPanel()
+    {
+        var font = GD.Load<Font>("res://themes/kreon_bold_glyph_space_two.tres");
+
+        var root = new PanelContainer();
+        root.Name = "ClassicModePanel";
+        root.AnchorLeft = 0.02f;
+        root.AnchorRight = 0.24f;
+        root.AnchorTop = 0.80f;
+        root.AnchorBottom = 0.80f;
+        root.GrowHorizontal = Control.GrowDirection.End;
+        root.GrowVertical = Control.GrowDirection.End;
+        root.MouseFilter = Control.MouseFilterEnum.Ignore;
+
+        var style = new StyleBoxFlat();
+        style.BgColor = new Color(0.06f, 0.05f, 0.09f, 0.85f);
+        style.BorderColor = new Color(0.55f, 0.42f, 0.18f, 0.7f);
+        style.SetBorderWidthAll(2);
+        style.SetCornerRadiusAll(8);
+        style.ContentMarginLeft = 16;
+        style.ContentMarginRight = 16;
+        style.ContentMarginTop = 10;
+        style.ContentMarginBottom = 10;
+        root.AddThemeStyleboxOverride("panel", style);
+
+        var vbox = new VBoxContainer();
+        vbox.AddThemeConstantOverride("separation", 8);
+        root.AddChild(vbox);
+
+        // Title
+        var title = new Label();
+        title.Text = "CLASSIC MODE";
+        title.HorizontalAlignment = HorizontalAlignment.Center;
+        title.AddThemeFontSizeOverride("font_size", 18);
+        title.AddThemeColorOverride("font_color", StsColors.gold);
+        title.AddThemeColorOverride("font_outline_color", new Color(0.08f, 0.06f, 0.1f, 1f));
+        title.AddThemeConstantOverride("outline_size", 4);
+        if (font != null) title.AddThemeFontOverride("font", font);
+        vbox.AddChild(title);
+
+        // Separator
+        var sep = new HSeparator();
+        sep.AddThemeConstantOverride("separation", 2);
+        sep.AddThemeStyleboxOverride("separator", new StyleBoxLine
+        {
+            Color = new Color(0.55f, 0.42f, 0.18f, 0.4f),
+            Thickness = 1
+        });
+        vbox.AddChild(sep);
+
+        // Card toggle
+        _cardsRow = new TickboxRow("Classic Cards", "\u7ecf\u5178\u5361\u724c", font,
+            ClassicConfig.ClassicCards, on =>
+            {
+                ClassicConfig.ClassicCards = on;
+                Log.Info($"[ClassicMode] Classic Cards: {on}");
+            });
+        vbox.AddChild(_cardsRow);
+
+        // Relic toggle
+        _relicsRow = new TickboxRow("Classic Relics", "\u7ecf\u5178\u9057\u7269", font,
+            ClassicConfig.ClassicRelics, on =>
+            {
+                ClassicConfig.ClassicRelics = on;
+                Log.Info($"[ClassicMode] Classic Relics: {on}");
+            });
+        vbox.AddChild(_relicsRow);
+
+        return root;
+    }
+}
+
+/// <summary>
+/// A single toggle row that mimics STS2's NTickbox visual style.
+/// Uses a colored square with checkmark + label, hover/press tween, and SFX.
+/// </summary>
+internal class TickboxRow : HBoxContainer
+{
+    private readonly Control _box;
+    private readonly Label _checkMark;
+    private readonly Label _label;
+    private readonly Action<bool> _onToggled;
+    private bool _ticked;
+    private Tween? _tween;
+    private readonly Vector2 _baseScale = Vector2.One;
+
+    public TickboxRow(string engText, string zhsText, Font? font, bool initial, Action<bool> onToggled)
+    {
+        _ticked = initial;
+        _onToggled = onToggled;
+
+        AddThemeConstantOverride("separation", 10);
+        MouseFilter = MouseFilterEnum.Stop;
+
+        // Tick box visual
+        var boxOuter = new Panel();
+        boxOuter.CustomMinimumSize = new Vector2(28, 28);
+        boxOuter.AddThemeStyleboxOverride("panel", new StyleBoxFlat
+        {
+            BgColor = new Color(0.12f, 0.10f, 0.16f, 0.9f),
+            BorderColor = _ticked ? StsColors.gold : new Color(0.4f, 0.35f, 0.25f, 0.8f),
+            BorderWidthTop = 2, BorderWidthBottom = 2,
+            BorderWidthLeft = 2, BorderWidthRight = 2,
+            CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
+            CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
+        });
+        _box = boxOuter;
+        AddChild(boxOuter);
+
+        // Checkmark
+        _checkMark = new Label();
+        _checkMark.Text = "\u2714";
+        _checkMark.HorizontalAlignment = HorizontalAlignment.Center;
+        _checkMark.VerticalAlignment = VerticalAlignment.Center;
+        _checkMark.AddThemeFontSizeOverride("font_size", 18);
+        _checkMark.AddThemeColorOverride("font_color", StsColors.gold);
+        _checkMark.AnchorRight = 1;
+        _checkMark.AnchorBottom = 1;
+        _checkMark.Visible = _ticked;
+        boxOuter.AddChild(_checkMark);
+
+        // Label
+        var label = new Label();
+        label.Text = $"{engText}  {zhsText}";
+        label.AddThemeFontSizeOverride("font_size", 15);
+        label.AddThemeColorOverride("font_color", _ticked ? StsColors.cream : new Color(0.65f, 0.60f, 0.50f));
+        label.AddThemeColorOverride("font_outline_color", new Color(0.05f, 0.04f, 0.08f, 0.8f));
+        label.AddThemeConstantOverride("outline_size", 2);
+        if (font != null) label.AddThemeFontOverride("font", font);
+        label.VerticalAlignment = VerticalAlignment.Center;
+        label.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        _label = label;
+        AddChild(label);
+
+        // Input handling
+        GuiInput += HandleInput;
+        MouseEntered += OnHover;
+        MouseExited += OnUnhover;
+    }
+
+    private void HandleInput(InputEvent e)
+    {
+        if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+        {
+            _ticked = !_ticked;
+            _checkMark.Visible = _ticked;
+
+            // Update colors
+            var boxStyle = (StyleBoxFlat)_box.GetThemeStylebox("panel");
+            boxStyle.BorderColor = _ticked ? StsColors.gold : new Color(0.4f, 0.35f, 0.25f, 0.8f);
+
+            _label.AddThemeColorOverride("font_color", _ticked ? StsColors.cream : new Color(0.65f, 0.60f, 0.50f));
+
+            // SFX
+            SfxCmd.Play(_ticked ? "event:/sfx/ui/clicks/ui_checkbox_on" : "event:/sfx/ui/clicks/ui_checkbox_off");
+
+            // Press animation
+            _tween?.Kill();
+            _tween = CreateTween();
+            _tween.TweenProperty(_box, "scale", _baseScale * 0.9f, 0.05);
+            _tween.TweenProperty(_box, "scale", _baseScale, 0.15)
+                .SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
+
+            _onToggled(_ticked);
+            AcceptEvent();
+        }
+    }
+
+    private void OnHover()
+    {
+        _tween?.Kill();
+        _tween = CreateTween();
+        _tween.TweenProperty(_box, "scale", _baseScale * 1.08f, 0.08)
+            .SetEase(Tween.EaseType.Out);
+    }
+
+    private void OnUnhover()
+    {
+        _tween?.Kill();
+        _tween = CreateTween();
+        _tween.TweenProperty(_box, "scale", _baseScale, 0.3)
+            .SetEase(Tween.EaseType.Out).SetTrans(Tween.TransitionType.Expo);
+    }
+}
+
+// ── Harmony patches ──
+
+[HarmonyPatch(typeof(NCharacterSelectScreen), nameof(NCharacterSelectScreen.InitializeSingleplayer))]
+internal static class ClassicModeCharSelectSingleplayerPatch
+{
+    static void Postfix(NCharacterSelectScreen __instance)
+    {
+        ClassicModePanel.Remove();
+        ClassicModePanel.Inject(__instance);
+    }
+}
+
+[HarmonyPatch(typeof(NCharacterSelectScreen), nameof(NCharacterSelectScreen.InitializeMultiplayerAsHost))]
+internal static class ClassicModeCharSelectHostPatch
+{
+    static void Postfix(NCharacterSelectScreen __instance)
+    {
+        ClassicModePanel.Remove();
+        ClassicModePanel.Inject(__instance);
+    }
+}
+
+[HarmonyPatch(typeof(NCharacterSelectScreen), nameof(NCharacterSelectScreen.InitializeMultiplayerAsClient))]
+internal static class ClassicModeCharSelectClientPatch
+{
+    static void Postfix(NCharacterSelectScreen __instance)
+    {
+        ClassicModePanel.Remove();
+        ClassicModePanel.Inject(__instance);
+    }
+}
+
+[HarmonyPatch(typeof(NCharacterSelectScreen), nameof(NCharacterSelectScreen.SelectCharacter))]
+internal static class ClassicModeCharSelectVisibilityPatch
+{
+    static void Postfix(CharacterModel characterModel)
+    {
+        ClassicModePanel.OnCharacterSelected(characterModel);
+    }
+}

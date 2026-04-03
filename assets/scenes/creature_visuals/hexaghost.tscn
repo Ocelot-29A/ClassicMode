@@ -1,0 +1,29 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://src/Core/Nodes/Combat/NCreatureVisuals.cs" id="1_script"]
+
+[node name="Hexaghost" type="Node2D"]
+script = ExtResource("1_script")
+metadata/_edit_group_ = true
+
+[node name="Visuals" type="Node2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, -150)
+
+[node name="Bounds" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 3
+anchors_preset = 0
+offset_left = -200.0
+offset_top = -400.0
+offset_right = 200.0
+offset_bottom = 50.0
+mouse_filter = 2
+
+[node name="CenterPos" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, -200)
+
+[node name="IntentPos" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(30, -420)

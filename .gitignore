@@ -1,0 +1,9 @@
+bin/
+obj/
+_sts1*
+*.py
+__pycache__
+_card*
+watcher_assets/
+_pck_src/
+0.*/
