@@ -23,7 +23,6 @@ namespace ClassicModeMod;
 
 // STS1 Blood for Blood: 4 energy, 18 damage (22 upgraded).
 // Costs 1 less energy for each time you lose HP this combat.
-// TODO: Implement cost reduction mechanic per HP loss via a combat tracker.
 public sealed class BloodForBlood_C : ClassicIroncladCard
 {
     protected override IEnumerable<DynamicVar> CanonicalVars =>
@@ -32,6 +31,16 @@ public sealed class BloodForBlood_C : ClassicIroncladCard
     public BloodForBlood_C()
         : base("blood_for_blood", 4, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
     {
+    }
+
+    public override Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target,
+        DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
+    {
+        if (target == Owner.Creature && result.UnblockedDamage > 0)
+        {
+            EnergyCost.AddThisCombat(-1, reduceOnly: true);
+        }
+        return Task.CompletedTask;
     }
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
@@ -44,6 +53,7 @@ public sealed class BloodForBlood_C : ClassicIroncladCard
 
     protected override void OnUpgrade()
     {
+        EnergyCost.UpgradeBy(-1);
         DynamicVars.Damage.UpgradeValueBy(4m);
     }
 }
@@ -115,8 +125,6 @@ public sealed class Dropkick_C : ClassicIroncladCard
 
 // STS1 Heavy Blade: 2 energy, 14 damage (14 upgraded).
 // Strength affects this card 3 times (5 upgraded).
-// TODO: Implement strength multiplier via custom DynamicVar calculation.
-// For now, uses standard damage which gets 1x strength.
 public sealed class HeavyBlade_C : ClassicIroncladCard
 {
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
@@ -136,7 +144,12 @@ public sealed class HeavyBlade_C : ClassicIroncladCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target);
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
+        // Standard attack applies 1x strength; add extra (multiplier-1)x strength
+        decimal strength = Owner.Creature.GetPowerAmount<StrengthPower>();
+        int multiplier = DynamicVars["StrengthMultiplier"].IntValue;
+        decimal extraStrength = strength * (multiplier - 1);
+        await DamageCmd.Attack(DynamicVars.Damage.BaseValue + extraStrength).FromCard(this)
+            .Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_heavy_blunt", null, "heavy_attack.mp3")
             .Execute(choiceContext);
     }
@@ -289,7 +302,7 @@ public sealed class RecklessCharge_C : ClassicIroncladCard
     }
 }
 
-// STS1 Searing Blow: 2 energy, 12 damage. Can be upgraded any number of times (+4 per upgrade).
+// STS1 Searing Blow: 2 energy, 12 damage. Can be upgraded any number of times.
 public sealed class SearingBlow_C : ClassicIroncladCard
 {
     public override int MaxUpgradeLevel => int.MaxValue;
@@ -312,8 +325,10 @@ public sealed class SearingBlow_C : ClassicIroncladCard
 
     protected override void OnUpgrade()
     {
-        // Each upgrade adds 4 more damage: +4, +8, +12, etc. (cumulative increase per level)
-        DynamicVars.Damage.UpgradeValueBy(4m * CurrentUpgradeLevel);
+        // STS1 upgrades add 4 + timesUpgraded damage before incrementing the card's displayed +N.
+        // In this API, CurrentUpgradeLevel has already been incremented before OnUpgrade runs,
+        // so the equivalent increment is 3 + CurrentUpgradeLevel.
+        DynamicVars.Damage.UpgradeValueBy(3m + CurrentUpgradeLevel);
     }
 }
 
@@ -523,18 +538,38 @@ public sealed class DualWield_C : ClassicIroncladCard
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        var selection = (await CardSelectCmd.FromHand(
-            prefs: new CardSelectorPrefs(SelectionScreenPrompt, 1),
-            context: choiceContext, player: Owner,
-            filter: c => c.Type == CardType.Attack || c.Type == CardType.Power,
-            source: this)).FirstOrDefault();
-        if (selection != null)
+        // STS1 Dual Wield semantics:
+        //   0 eligible cards in hand → no selection screen, no effect
+        //   1 eligible card → auto-pick without showing the screen
+        //   2+ eligible cards → show CardSelect screen as normal
+        var eligible = PileType.Hand.GetPile(Owner).Cards
+            .Where(c => c != this && (c.Type == CardType.Attack || c.Type == CardType.Power))
+            .ToList();
+
+        if (eligible.Count == 0)
+            return;
+
+        CardModel? selection;
+        if (eligible.Count == 1)
         {
-            for (int i = 0; i < DynamicVars.Cards.IntValue; i++)
-            {
-                var clone = selection.CreateClone();
-                await CardPileCmd.AddGeneratedCardToCombat(clone, PileType.Hand, addedByPlayer: true);
-            }
+            selection = eligible[0];
+        }
+        else
+        {
+            selection = (await CardSelectCmd.FromHand(
+                prefs: new CardSelectorPrefs(SelectionScreenPrompt, 1),
+                context: choiceContext, player: Owner,
+                filter: c => c.Type == CardType.Attack || c.Type == CardType.Power,
+                source: this)).FirstOrDefault();
+        }
+
+        if (selection == null)
+            return;
+
+        for (int i = 0; i < DynamicVars.Cards.IntValue; i++)
+        {
+            var clone = selection.CreateClone();
+            await CardPileCmd.AddGeneratedCardToCombat(clone, PileType.Hand, addedByPlayer: true);
         }
     }
 
@@ -811,8 +846,6 @@ public sealed class SeeingRed_C : ClassicIroncladCard
 
 // STS1 Sentinel: 1 energy, gain 5 block (8 upgraded).
 // If this card is Exhausted, gain 2 energy (3 upgraded).
-// TODO: Implement exhaust callback to grant energy. The STS2 exhaust callback mechanism
-// may need a custom power or hook for "on this card exhausted" behavior.
 public sealed class Sentinel_C : ClassicIroncladCard
 {
     public override bool GainsBlock => true;
@@ -834,6 +867,14 @@ public sealed class Sentinel_C : ClassicIroncladCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
+    }
+
+    public override async Task AfterCardExhausted(PlayerChoiceContext choiceContext, CardModel card, bool causedByEthereal)
+    {
+        if (card != this)
+            return;
+
+        await PlayerCmd.GainEnergy(DynamicVars.Energy.IntValue, Owner);
     }
 
     protected override void OnUpgrade()
@@ -892,8 +933,7 @@ public sealed class SpotWeakness_C : ClassicIroncladCard
 
     // Glow gold when target enemy intends to attack
     protected override bool ShouldGlowGoldInternal =>
-        CombatState?.HittableEnemies.Any(e =>
-            e.IsMonster && e.Monster.NextMove?.Intents.Any(i => i is AttackIntent) == true) ?? false;
+        CombatState?.HittableEnemies.Any(e => e.Monster?.IntendsToAttack ?? false) ?? false;
 
     public SpotWeakness_C()
         : base("spot_weakness", 1, CardType.Skill, CardRarity.Uncommon, TargetType.AnyEnemy)
@@ -904,8 +944,7 @@ public sealed class SpotWeakness_C : ClassicIroncladCard
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target);
         // Check if the target enemy intends to attack
-        bool isAttacking = cardPlay.Target.IsMonster &&
-            cardPlay.Target.Monster.NextMove?.Intents.Any(i => i is AttackIntent) == true;
+        bool isAttacking = cardPlay.Target.Monster?.IntendsToAttack ?? false;
         if (isAttacking)
         {
             await PowerCmd.Apply<StrengthPower>(Owner.Creature, DynamicVars.Strength.BaseValue, Owner.Creature, this);

@@ -10,19 +10,39 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <OutputPath>bin\Release\net9.0\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!--
+      Sts2GameDir resolves to the STS2 install this project builds against.
+      Resolution order:
+        1. /p:Sts2GameDir=... on the dotnet command line
+        2. STS2_GAME_DIR environment variable (set by build.ps1)
+        3. Steam default install paths (last-resort fallback)
+    -->
+    <Sts2GameDir Condition="'$(Sts2GameDir)' == ''">$(STS2_GAME_DIR)</Sts2GameDir>
+    <Sts2GameDir Condition="'$(Sts2GameDir)' == '' And Exists('C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll')">C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2</Sts2GameDir>
+    <Sts2GameDir Condition="'$(Sts2GameDir)' == '' And Exists('D:\Steam\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll')">D:\Steam\steamapps\common\Slay the Spire 2</Sts2GameDir>
+    <Sts2GameDir Condition="'$(Sts2GameDir)' == '' And Exists('D:\software\steam\steamapps\common\Slay the Spire 2\data_sts2_windows_x86_64\sts2.dll')">D:\software\steam\steamapps\common\Slay the Spire 2</Sts2GameDir>
+
+    <Sts2LibDir>$(Sts2GameDir)\data_sts2_windows_x86_64</Sts2LibDir>
   </PropertyGroup>
+
+  <Target Name="VerifyStsGameDir" BeforeTargets="ResolveAssemblyReferences">
+    <Error
+      Condition="'$(Sts2GameDir)' == '' Or !Exists('$(Sts2LibDir)\sts2.dll')"
+      Text="STS2 install not found. Set the STS2_GAME_DIR env var or pass /p:Sts2GameDir=... pointing at your Slay the Spire 2 install (the directory containing data_sts2_windows_x86_64\sts2.dll). Current value: '$(Sts2GameDir)'." />
+  </Target>
 
   <ItemGroup>
     <Reference Include="sts2">
-      <HintPath>..\..\data_sts2_windows_x86_64\sts2.dll</HintPath>
+      <HintPath>$(Sts2LibDir)\sts2.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="GodotSharp">
-      <HintPath>..\..\data_sts2_windows_x86_64\GodotSharp.dll</HintPath>
+      <HintPath>$(Sts2LibDir)\GodotSharp.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="0Harmony">
-      <HintPath>..\..\data_sts2_windows_x86_64\0Harmony.dll</HintPath>
+      <HintPath>$(Sts2LibDir)\0Harmony.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

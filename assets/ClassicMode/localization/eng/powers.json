@@ -39,6 +39,12 @@
   "LOOP_POWER_C.description": "At the start of your turn, trigger the passive ability of your next Orb {Amount} times.",
   "HEATSINKS_POWER_C.title": "Heatsinks",
   "HEATSINKS_POWER_C.description": "Whenever you play a Power card, draw {Amount} cards.",
+  "LOCK_ON_POWER_C.title": "Lock-On",
+  "LOCK_ON_POWER_C.description": "Receives 50% more damage from Orbs for {Amount} turn(s).",
+  "REBOUND_POWER_C.title": "Rebound",
+  "REBOUND_POWER_C.description": "The next card you play this turn is placed on top of your draw pile.",
+  "AMPLIFY_POWER_C.title": "Amplify",
+  "AMPLIFY_POWER_C.description": "Your next Power card is played twice this turn.",
   "ECHO_FORM_POWER_C.title": "Echo Form",
   "ECHO_FORM_POWER_C.description": "The first card you play each turn is played twice."
 }

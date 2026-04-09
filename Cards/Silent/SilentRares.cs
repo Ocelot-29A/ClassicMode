@@ -108,12 +108,12 @@ public sealed class Unload_C : ClassicSilentCard
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(choiceContext);
-        // Exhaust all non-Attack cards in hand
-        List<CardModel> toExhaust = PileType.Hand.GetPile(Owner).Cards
+        // Discard all non-Attack cards in hand (STS1 behavior)
+        List<CardModel> toDiscard = PileType.Hand.GetPile(Owner).Cards
             .Where(c => c.Type != CardType.Attack).ToList();
-        foreach (CardModel card in toExhaust)
+        foreach (CardModel card in toDiscard)
         {
-            await CardCmd.Exhaust(choiceContext, card);
+            await CardCmd.Discard(choiceContext, card);
         }
     }
 
@@ -130,6 +130,42 @@ public sealed class Unload_C : ClassicSilentCard
 // ────────────────────────────────────────────────────────────────────────────
 // NOTE: In STS1 this is actually an Uncommon, not Rare. Placed here for completeness.
 // We'll put it in pool as uncommon via the pool.
+public sealed class FanOfKnives_C : ClassicSilentCard
+{
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+    [
+        new DamageVar(4m, ValueProp.Move),
+        new CardsVar(1)
+    ];
+
+    public FanOfKnives_C()
+        : base("fan_of_knives", 1, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies)
+    {
+    }
+
+    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    {
+        ArgumentNullException.ThrowIfNull(CombatState);
+        await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this)
+            .TargetingAllOpponents(CombatState)
+            .WithHitFx("vfx/vfx_dagger_throw", null, "dagger_throw.mp3")
+            .SpawningHitVfxOnEachCreature()
+            .Execute(choiceContext);
+        await CardPileCmd.Draw(choiceContext, DynamicVars.Cards.BaseValue, Owner);
+    }
+
+    protected override void OnUpgrade()
+    {
+        DynamicVars.Damage.UpgradeValueBy(3m);
+    }
+
+    public override string PortraitPath => ModelDb.Card<FanOfKnives>().PortraitPath;
+
+    public override string BetaPortraitPath => ModelDb.Card<FanOfKnives>().BetaPortraitPath;
+
+    public override IEnumerable<string> AllPortraitPaths => [PortraitPath, BetaPortraitPath];
+}
+
 
 // ═══════════════════════════════════════════════════════════════════
 // SILENT RARE SKILLS (7)
@@ -269,7 +305,7 @@ public sealed class Doppelganger_C : ClassicSilentCard
     ];
 
     public Doppelganger_C()
-        : base("doppelganger", 0, CardType.Skill, CardRarity.Rare, TargetType.Self)
+        : base("doppelganger", -1, CardType.Skill, CardRarity.Rare, TargetType.Self)
     {
     }
 
@@ -303,7 +339,7 @@ public sealed class Malaise_C : ClassicSilentCard
     ];
 
     public Malaise_C()
-        : base("malaise", 0, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy)
+        : base("malaise", -1, CardType.Skill, CardRarity.Rare, TargetType.AnyEnemy)
     {
     }
 
@@ -312,7 +348,11 @@ public sealed class Malaise_C : ClassicSilentCard
         ArgumentNullException.ThrowIfNull(cardPlay.Target);
         int x = ResolveEnergyXValue();
         int amount = IsUpgraded ? x + 1 : x;
-        await PowerCmd.Apply<StrengthPower>(cardPlay.Target, -amount, Owner.Creature, this);
+        if (amount <= 0)
+        {
+            return;
+        }
+        await PowerCmd.Apply<MalaiseTempStrengthPower>(cardPlay.Target, amount, Owner.Creature, this);
         await PowerCmd.Apply<WeakPower>(cardPlay.Target, amount, Owner.Creature, this);
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Godot;
 using MegaCrit.Sts2.Core.Audio;
@@ -6,15 +7,21 @@ using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Ascension;
 using MegaCrit.Sts2.Core.Entities.Cards;
 using MegaCrit.Sts2.Core.Entities.Creatures;
+using MegaCrit.Sts2.Core.Entities.Players;
+using MegaCrit.Sts2.Core.GameActions.Multiplayer;
 using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Localization;
+using MegaCrit.Sts2.Core.Localization.DynamicVars;
 using MegaCrit.Sts2.Core.Models;
+using MegaCrit.Sts2.Core.Models.CardPools;
 using MegaCrit.Sts2.Core.Models.Cards;
 using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.MonsterMoves.Intents;
 using MegaCrit.Sts2.Core.MonsterMoves.MonsterMoveStateMachine;
 using MegaCrit.Sts2.Core.Nodes.Combat;
+using MegaCrit.Sts2.Core.Nodes.CommonUi;
 using MegaCrit.Sts2.Core.Nodes.Rooms;
+using MegaCrit.Sts2.Core.Nodes.Vfx;
 using MegaCrit.Sts2.Core.ValueProps;
 
 namespace ClassicModeMod;
@@ -42,6 +49,7 @@ public sealed class Hexaghost : MonsterModel
 
     private int InfernoDamage => AscensionHelper.GetValueIfAscension(AscensionLevel.DeadlyEnemies, 3, 2);
     private const int InfernoHits = 6;
+    internal const int UpgradedBurnDamage = 4;
 
     // --- Visuals ---
     public override LocString Title => L10NMonsterLookup("Hexaghost.name");
@@ -144,10 +152,11 @@ public sealed class Hexaghost : MonsterModel
             .WithHitFx("vfx/vfx_attack_fire")
             .Execute(null);
 
-        // After Inferno: deactivate all orbs, mark burns as upgraded
+        // After Inferno: deactivate all orbs and upgrade all Burns for the rest of combat
         _orbActiveCount = 0;
         _burnUpgraded = true;
         SetAllOrbsActive(false);
+        await UpgradeExistingBurns(targets);
     }
 
     private async Task SearMove(IReadOnlyList<Creature> targets)
@@ -160,7 +169,7 @@ public sealed class Hexaghost : MonsterModel
             .Execute(null);
 
         // Add Burn cards to discard pile
-        await CardPileCmd.AddToCombatAndPreview<Burn>(targets, PileType.Discard, SearBurnCount, addedByPlayer: false);
+        await AddBurnsToDiscard(targets, SearBurnCount);
 
         // Activate one orb
         ActivateNextOrb();
@@ -189,6 +198,58 @@ public sealed class Hexaghost : MonsterModel
 
         // Activate one orb
         ActivateNextOrb();
+    }
+
+    private async Task AddBurnsToDiscard(IReadOnlyList<Creature> targets, int count)
+    {
+        if (!_burnUpgraded)
+        {
+            await CardPileCmd.AddToCombatAndPreview<Burn>(targets, PileType.Discard, count, addedByPlayer: false);
+            return;
+        }
+
+        var addedCards = new List<CardPileAddResult>(count * targets.Count);
+        foreach (Creature target in targets)
+        {
+            Player? owner = target.Player ?? target.PetOwner;
+            if (owner == null)
+                continue;
+
+            for (int i = 0; i < count; i++)
+            {
+                HexaghostBurnPlus? burn = target.CombatState?.CreateCard<HexaghostBurnPlus>(owner);
+                if (burn == null)
+                    continue;
+
+                addedCards.Add(await CardPileCmd.Add(burn, PileType.Discard));
+            }
+        }
+
+        if (addedCards.Count > 0)
+        {
+            CardCmd.PreviewCardPileAdd(
+                addedCards.ToArray(),
+                1.2f,
+                addedCards.Count <= 5 ? CardPreviewStyle.HorizontalLayout : CardPreviewStyle.MessyLayout);
+        }
+    }
+
+    private async Task UpgradeExistingBurns(IReadOnlyList<Creature> targets)
+    {
+        foreach (Creature target in targets)
+        {
+            Player? owner = target.Player ?? target.PetOwner;
+            if (owner == null)
+                continue;
+
+            List<CardModel> burnsToUpgrade = CardPile.GetCards(owner, PileType.Hand, PileType.Draw, PileType.Discard, PileType.Exhaust, PileType.Play)
+                .Where(card => card is Burn)
+                .ToList();
+            foreach (CardModel burn in burnsToUpgrade)
+            {
+                await CardCmd.TransformTo<HexaghostBurnPlus>(burn, CardPreviewStyle.None);
+            }
+        }
     }
 
     // ===================== ORB VISUALS =====================
@@ -325,5 +386,32 @@ public sealed class Hexaghost : MonsterModel
         var tween = body.CreateTween();
         tween.SetLoops(); // infinite
         tween.TweenProperty(_bodyNode, "rotation", Mathf.Tau, 60.0f); // full rotation in 60s (slow ambient)
+    }
+}
+
+public sealed class HexaghostBurnPlus : CardModel
+{
+    public override int MaxUpgradeLevel => 0;
+    public override CardPoolModel Pool => ModelDb.CardPool<StatusCardPool>();
+    public override CardPoolModel VisualCardPool => ModelDb.CardPool<StatusCardPool>();
+    public override string PortraitPath => ModelDb.Card<Burn>().PortraitPath;
+    public override string BetaPortraitPath => ModelDb.Card<Burn>().BetaPortraitPath;
+    public override IEnumerable<string> AllPortraitPaths => ModelDb.Card<Burn>().AllPortraitPaths;
+    protected override IEnumerable<DynamicVar> CanonicalVars =>
+        [new DamageVar(Hexaghost.UpgradedBurnDamage, ValueProp.Unpowered | ValueProp.Move)];
+    public override IEnumerable<CardKeyword> CanonicalKeywords => [CardKeyword.Unplayable];
+    public override bool HasTurnEndInHandEffect => true;
+    protected override IEnumerable<string> ExtraRunAssetPaths => NGroundFireVfx.AssetPaths;
+
+    public HexaghostBurnPlus()
+        : base(-1, CardType.Status, CardRarity.Status, TargetType.None)
+    {
+    }
+
+    public override async Task OnTurnEndInHand(PlayerChoiceContext choiceContext)
+    {
+        NCombatRoom.Instance?.CombatVfxContainer.AddChildSafely(NGroundFireVfx.Create(Owner.Creature));
+        SfxCmd.Play("event:/sfx/characters/attack_fire");
+        await CreatureCmd.Damage(choiceContext, Owner.Creature, DynamicVars.Damage, this);
     }
 }

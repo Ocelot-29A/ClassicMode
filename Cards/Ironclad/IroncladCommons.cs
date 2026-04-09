@@ -361,13 +361,20 @@ public sealed class PerfectedStrike_C : ClassicIroncladCard
 {
     protected override HashSet<CardTag> CanonicalTags => [CardTag.Strike];
 
+    private static bool CountsAsStrikeNamedCard(CardModel card)
+    {
+        string localizedTitle = card.TitleLocString.GetFormattedText();
+        return localizedTitle.Contains("Strike", StringComparison.OrdinalIgnoreCase)
+            || card.Id.Entry.Contains("strike", StringComparison.OrdinalIgnoreCase);
+    }
+
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
         new CalculationBaseVar(6m),
         new ExtraDamageVar(2m),
         new CalculatedDamageVar(ValueProp.Move)
             .WithMultiplier((CardModel card, Creature? _) =>
-                card.Owner.PlayerCombatState.AllCards.Count(c => c.Tags.Contains(CardTag.Strike)))
+                card.Owner?.PlayerCombatState?.AllCards.Count(CountsAsStrikeNamedCard) ?? 0)
     ];
 
     public PerfectedStrike_C()
@@ -629,12 +636,33 @@ public sealed class Warcry_C : ClassicIroncladCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CardPileCmd.Draw(choiceContext, DynamicVars.Cards.BaseValue, Owner);
-        var card = (await CardSelectCmd.FromHand(
-            prefs: new CardSelectorPrefs(SelectionScreenPrompt, 1),
-            context: choiceContext,
-            player: Owner,
-            filter: null,
-            source: this)).FirstOrDefault();
+
+        // STS1 Warcry semantics:
+        //   0 cards in hand (after draw, excluding self) → no selection screen
+        //   1 card → auto-pick without showing the screen
+        //   2+ cards → show CardSelect as normal
+        var hand = PileType.Hand.GetPile(Owner).Cards
+            .Where(c => c != this)
+            .ToList();
+
+        if (hand.Count == 0)
+            return;
+
+        CardModel? card;
+        if (hand.Count == 1)
+        {
+            card = hand[0];
+        }
+        else
+        {
+            card = (await CardSelectCmd.FromHand(
+                prefs: new CardSelectorPrefs(SelectionScreenPrompt, 1),
+                context: choiceContext,
+                player: Owner,
+                filter: null,
+                source: this)).FirstOrDefault();
+        }
+
         if (card != null)
             await CardPileCmd.Add(card, PileType.Draw, CardPilePosition.Top);
     }
@@ -669,7 +697,10 @@ public sealed class WildStrike_C : ClassicIroncladCard
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(choiceContext);
         await CardPileCmd.AddGeneratedCardToCombat(
-            CombatState.CreateCard<MegaCrit.Sts2.Core.Models.Cards.Wound>(Owner), PileType.Draw, addedByPlayer: true);
+            CombatState.CreateCard<MegaCrit.Sts2.Core.Models.Cards.Wound>(Owner),
+            PileType.Draw,
+            addedByPlayer: true,
+            CardPilePosition.Random);
     }
 
     protected override void OnUpgrade()

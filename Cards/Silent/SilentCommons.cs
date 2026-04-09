@@ -1,4 +1,6 @@
 using MegaCrit.Sts2.Core.CardSelection;
+using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Combat.History.Entries;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Commands.Builders;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -258,9 +260,24 @@ public sealed class SneakyStrike_C : ClassicSilentCard
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         [new DamageVar(12m, ValueProp.Move)];
 
+    protected override bool ShouldGlowGoldInternal => HasDiscardedThisTurn;
+
+    private bool HasDiscardedThisTurn =>
+        CombatManager.Instance.History.Entries.OfType<CardDiscardedEntry>()
+            .Any(e => e.HappenedThisTurn(CombatState) && e.Card.Owner == Owner);
+
     public SneakyStrike_C()
         : base("sneaky_strike", 2, CardType.Attack, CardRarity.Common, TargetType.AnyEnemy)
     {
+    }
+
+    public override bool TryModifyEnergyCostInCombat(CardModel card, decimal originalCost, out decimal modifiedCost)
+    {
+        modifiedCost = originalCost;
+        if (card != this) return false;
+        if (!HasDiscardedThisTurn) return false;
+        modifiedCost = 0m;
+        return true;
     }
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)

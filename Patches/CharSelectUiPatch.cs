@@ -19,6 +19,8 @@ internal static class ClassicModePanel
     private static PanelContainer? _root;
     private static TickboxRow? _cardsRow;
     private static TickboxRow? _relicsRow;
+    private static TickboxRow? _hybridRow;
+    private static TickboxRow? _dedupeRow;
 
     internal static bool Exists => _root != null && GodotObject.IsInstanceValid(_root);
 
@@ -39,6 +41,8 @@ internal static class ClassicModePanel
         _root = null;
         _cardsRow = null;
         _relicsRow = null;
+        _hybridRow = null;
+        _dedupeRow = null;
     }
 
     internal static void OnCharacterSelected(CharacterModel? character)
@@ -55,8 +59,8 @@ internal static class ClassicModePanel
         root.Name = "ClassicModePanel";
         root.AnchorLeft = 0.02f;
         root.AnchorRight = 0.24f;
-        root.AnchorTop = 0.80f;
-        root.AnchorBottom = 0.80f;
+        root.AnchorTop = 0.05f;
+        root.AnchorBottom = 0.05f;
         root.GrowHorizontal = Control.GrowDirection.End;
         root.GrowVertical = Control.GrowDirection.End;
         root.MouseFilter = Control.MouseFilterEnum.Ignore;
@@ -115,6 +119,34 @@ internal static class ClassicModePanel
             });
         vbox.AddChild(_relicsRow);
 
+        // Divider above hybrid master toggle
+        var sep2 = new HSeparator();
+        sep2.AddThemeConstantOverride("separation", 2);
+        sep2.AddThemeStyleboxOverride("separator", new StyleBoxLine
+        {
+            Color = new Color(0.55f, 0.42f, 0.18f, 0.4f),
+            Thickness = 1
+        });
+        vbox.AddChild(sep2);
+
+        // Hybrid (STS1 + STS2 merged pools) master toggle
+        _hybridRow = new TickboxRow("Hybrid Mode", "\u6df7\u5408\u6a21\u5f0f", font,
+            ClassicConfig.ClassicHybrid, on =>
+            {
+                ClassicConfig.ClassicHybrid = on;
+                Log.Info($"[ClassicMode] Hybrid Mode: {on}");
+            });
+        vbox.AddChild(_hybridRow);
+
+        // Hybrid sub-option: merge same-named cards/relics so STS2 wins
+        _dedupeRow = new TickboxRow("Dedupe Overlaps", "\u540c\u540d\u53bb\u91cd\uff08\u7559\u4e8c\u4ee3\uff09", font,
+            ClassicConfig.HybridDedupe, on =>
+            {
+                ClassicConfig.HybridDedupe = on;
+                Log.Info($"[ClassicMode] Hybrid Dedupe: {on}");
+            });
+        vbox.AddChild(_dedupeRow);
+
         return root;
     }
 }
@@ -141,7 +173,11 @@ internal class TickboxRow : HBoxContainer
         AddThemeConstantOverride("separation", 10);
         MouseFilter = MouseFilterEnum.Stop;
 
-        // Tick box visual
+        // Tick box visual.
+        // CRITICAL: every child Control must have MouseFilter = Ignore so mouse
+        // events pass through to this HBoxContainer's GuiInput handler. The
+        // default MouseFilter for Panel/Label is Stop, which silently eats the
+        // click and the row appears unresponsive. (See STS1Replica TickboxRow.)
         var boxOuter = new Panel();
         boxOuter.CustomMinimumSize = new Vector2(28, 28);
         boxOuter.AddThemeStyleboxOverride("panel", new StyleBoxFlat
@@ -153,6 +189,7 @@ internal class TickboxRow : HBoxContainer
             CornerRadiusTopLeft = 4, CornerRadiusTopRight = 4,
             CornerRadiusBottomLeft = 4, CornerRadiusBottomRight = 4,
         });
+        boxOuter.MouseFilter = MouseFilterEnum.Ignore;
         _box = boxOuter;
         AddChild(boxOuter);
 
@@ -166,6 +203,7 @@ internal class TickboxRow : HBoxContainer
         _checkMark.AnchorRight = 1;
         _checkMark.AnchorBottom = 1;
         _checkMark.Visible = _ticked;
+        _checkMark.MouseFilter = MouseFilterEnum.Ignore;
         boxOuter.AddChild(_checkMark);
 
         // Label
@@ -178,6 +216,7 @@ internal class TickboxRow : HBoxContainer
         if (font != null) label.AddThemeFontOverride("font", font);
         label.VerticalAlignment = VerticalAlignment.Center;
         label.SizeFlagsVertical = SizeFlags.ShrinkCenter;
+        label.MouseFilter = MouseFilterEnum.Ignore;
         _label = label;
         AddChild(label);
 

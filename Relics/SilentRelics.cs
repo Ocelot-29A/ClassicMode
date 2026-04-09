@@ -79,7 +79,10 @@ public sealed class HoveringKite : ClassicRelic
     {
         if (card.Owner != Owner) return;
         if (TriggeredThisTurn) return;
-        if (Owner.Creature.Side != Owner.Creature.CombatState.CurrentSide) return;
+
+        var combatState = Owner.Creature.CombatState;
+        if (combatState == null) return;
+        if (Owner.Creature.Side != combatState.CurrentSide) return;
 
         TriggeredThisTurn = true;
         Flash();

@@ -17,6 +17,13 @@ namespace ClassicModeMod;
 // STS1 Silent-specific powers (classic implementations)
 // ═══════════════════════════════════════════════════════════════════
 
+public sealed class MalaiseTempStrengthPower : TemporaryStrengthPower
+{
+    public override AbstractModel OriginModel => ModelDb.Card<Malaise_C>();
+
+    protected override bool IsPositive => false;
+}
+
 /// <summary>
 /// Whenever you play a card, deal Amount damage to ALL enemies.
 /// STS1: A Thousand Cuts (1 base / 2 upgraded).
@@ -48,6 +55,16 @@ public sealed class ChokeHoldPower : PowerModel
     public override PowerType Type => PowerType.Debuff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
+    public override async Task AfterCardPlayed(PlayerChoiceContext context, CardPlay cardPlay)
+    {
+        // When the player who applied this plays a card, deal damage to this enemy
+        if (cardPlay.Card.Owner.Creature != base.Owner && base.Amount > 0)
+        {
+            Flash();
+            await CreatureCmd.Damage(context, base.Owner, base.Amount, ValueProp.Unpowered, cardPlay.Card.Owner.Creature, null);
+        }
+    }
+
     public override async Task BeforeTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
     {
         // Choke wears off at end of player turn (like STS1)
@@ -56,19 +73,37 @@ public sealed class ChokeHoldPower : PowerModel
             await PowerCmd.Remove(this);
         }
     }
-
-    // In STS1, enemy takes damage each time player plays a card while choked.
-    // We approximate this as a per-card-played trigger on the owner's side.
 }
 
 /// <summary>
-/// When this creature dies, deal its current poison as damage to ALL enemies.
+/// When this creature dies, deal damage equal to its Max HP to ALL enemies.
 /// STS1: Corpse Explosion.
 /// </summary>
 public sealed class CorpseExplosionPower : PowerModel
 {
     public override PowerType Type => PowerType.Debuff;
     public override PowerStackType StackType => PowerStackType.Counter;
+
+    // CRITICAL: PowerModel default removes powers from the dying creature BEFORE
+    // AfterDeath hooks fire on it (Creature.RemoveAllPowersAfterDeath uses
+    // ShouldPowerBeRemovedAfterOwnerDeath()). Without this override the explosion
+    // never triggers. STS2's SteamEruptionPower has the same pattern.
+    public override bool ShouldPowerBeRemovedAfterOwnerDeath() => false;
+
+    public override async Task AfterDeath(PlayerChoiceContext choiceContext, Creature target, bool wasRemovalPrevented, float deathAnimLength)
+    {
+        if (target != base.Owner) return;
+        if (wasRemovalPrevented) return;
+
+        Flash();
+        decimal maxHp = target.MaxHp;
+        var enemies = base.CombatState.GetOpponentsOf(target)
+            .Where(c => c.IsAlive && c != target).ToList();
+        if (enemies.Count > 0)
+        {
+            await CreatureCmd.Damage(choiceContext, enemies, maxHp, ValueProp.Unpowered, target, null);
+        }
+    }
 }
 
 /// <summary>
@@ -77,21 +112,32 @@ public sealed class CorpseExplosionPower : PowerModel
 /// </summary>
 public sealed class PhantasmalKillerPower : PowerModel
 {
+    private bool _isActive;
+
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
+    public override async Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    {
+        if (side != base.Owner.Side || _isActive)
+            return;
+
+        Flash();
+        _isActive = true;
+        await Task.CompletedTask;
+    }
+
     public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? card)
     {
-        if (dealer == base.Owner)
-        {
-            return amount; // double the damage (adds 100%)
-        }
-        return 0m;
+        if (!_isActive) return 1m;
+        if (dealer != base.Owner) return 1m;
+        if (!props.HasFlag(ValueProp.Move)) return 1m;
+        return 2m;
     }
 
     public override async Task BeforeTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
     {
-        if (side == base.Owner.Side)
+        if (side == base.Owner.Side && _isActive)
         {
             await PowerCmd.Remove(this);
         }

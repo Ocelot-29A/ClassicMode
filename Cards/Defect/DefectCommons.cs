@@ -64,7 +64,7 @@ public sealed class Barrage_C : ClassicDefectCard
         new CalculationExtraVar(1m),
         new CalculatedVar("CalculatedHits")
             .WithMultiplier((CardModel card, Creature? _) =>
-                card.Owner.PlayerCombatState.OrbQueue.Orbs.Count)
+                card.Owner.PlayerCombatState?.OrbQueue?.Orbs.Count ?? 0)
     ];
 
     public Barrage_C()
@@ -126,7 +126,7 @@ public sealed class BeamCell_C : ClassicDefectCard
     }
 }
 
-// STS1 Claw: 0 energy, 3 damage (5 upgraded). Increase damage of ALL Claw cards by 2 (4 upgraded).
+// STS1 Claw: 0 energy, 3 damage (5 upgraded). Increase damage of ALL Claw cards by 2.
 public sealed class Claw_C : ClassicDefectCard
 {
     private const string IncreaseKey = "Increase";
@@ -169,7 +169,6 @@ public sealed class Claw_C : ClassicDefectCard
     protected override void OnUpgrade()
     {
         DynamicVars.Damage.UpgradeValueBy(2m);
-        DynamicVars[IncreaseKey].UpgradeValueBy(2m);
     }
 
     protected override void AfterDowngraded()
@@ -237,8 +236,9 @@ public sealed class CompiledDriver_C : ClassicDefectCard
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(choiceContext);
-        int uniqueOrbs = Owner.PlayerCombatState.OrbQueue.Orbs
-            .Select(o => o.GetType()).Distinct().Count();
+        var orbQueue = Owner.PlayerCombatState?.OrbQueue;
+        int uniqueOrbs = orbQueue?.Orbs
+            .Select(o => o.GetType()).Distinct().Count() ?? 0;
         if (uniqueOrbs > 0)
         {
             await CardPileCmd.Draw(choiceContext, uniqueOrbs, Owner);
@@ -308,10 +308,7 @@ public sealed class Streamline_C : ClassicDefectCard
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_flying_slash")
             .Execute(choiceContext);
-        if (EnergyCost.GetWithModifiers(CostModifiers.None) > 0)
-        {
-            EnergyCost.UpgradeBy(-1);
-        }
+        EnergyCost.AddThisCombat(-1, reduceOnly: true);
     }
 
     protected override void OnUpgrade()
@@ -457,7 +454,7 @@ public sealed class Recursion_C : ClassicDefectCard
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        var orbQueue = Owner.PlayerCombatState.OrbQueue;
+        var orbQueue = Owner.PlayerCombatState?.OrbQueue;
         if (orbQueue?.Orbs.Count > 0)
         {
             var firstOrb = orbQueue.Orbs[0];

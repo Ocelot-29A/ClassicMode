@@ -1,9 +1,26 @@
+# Build artifacts
 bin/
 obj/
-_sts1*
-*.py
-__pycache__
-_card*
-watcher_assets/
+build/
 _pck_src/
+
+# Tooling / local dev state
+.boncli/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Legacy in-repo dev folders (from when this lived inside the STS2 game tree)
+_sts1*
+_card*
 0.*/

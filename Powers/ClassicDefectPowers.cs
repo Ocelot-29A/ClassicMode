@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using HarmonyLib;
 using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -15,23 +18,139 @@ using MegaCrit.Sts2.Core.ValueProps;
 
 namespace ClassicModeMod;
 
+internal static class OrbDamageScope
+{
+    private static readonly AsyncLocal<Stack<OrbModel>?> CurrentOrbs = new();
+
+    public static OrbModel? CurrentOrb =>
+        CurrentOrbs.Value is { Count: > 0 } stack ? stack.Peek() : null;
+
+    public static void Push(OrbModel orb)
+    {
+        (CurrentOrbs.Value ??= new Stack<OrbModel>()).Push(orb);
+    }
+
+    public static async Task Wrap(Task task, OrbModel orb)
+    {
+        try
+        {
+            await task;
+        }
+        finally
+        {
+            Stack<OrbModel>? stack = CurrentOrbs.Value;
+            if (stack != null && stack.Count > 0 && ReferenceEquals(stack.Peek(), orb))
+            {
+                stack.Pop();
+                if (stack.Count == 0)
+                    CurrentOrbs.Value = null;
+            }
+        }
+    }
+}
+
+[HarmonyPatch(typeof(OrbCmd), "Passive")]
+internal static class OrbPassiveScopePatch
+{
+    static void Prefix(OrbModel orb)
+    {
+        OrbDamageScope.Push(orb);
+    }
+
+    static void Postfix(OrbModel orb, ref Task __result)
+    {
+        __result = OrbDamageScope.Wrap(__result, orb);
+    }
+}
+
+[HarmonyPatch(typeof(OrbCmd), "Evoke")]
+internal static class OrbEvokeScopePatch
+{
+    static void Prefix(OrbModel evokedOrb)
+    {
+        OrbDamageScope.Push(evokedOrb);
+    }
+
+    static void Postfix(OrbModel evokedOrb, ref Task __result)
+    {
+        __result = OrbDamageScope.Wrap(__result, evokedOrb);
+    }
+}
+
 // ═══════════════════════════════════════════════════════════════════
 // CLASSIC DEFECT POWERS
 // ═══════════════════════════════════════════════════════════════════
 
 /// <summary>
+/// STS1 Lock-On: the target receives 50% more damage from the applier's Orbs.
+/// </summary>
+public sealed class LockOnPower_C : PowerModel
+{
+    private const decimal OrbDamageMultiplier = 1.5m;
+
+    public override PowerType Type => PowerType.Debuff;
+    public override PowerStackType StackType => PowerStackType.Counter;
+    public override bool IsInstanced => true;
+
+    public override decimal ModifyDamageMultiplicative(Creature? target, decimal amount, ValueProp props, Creature? dealer, CardModel? cardSource)
+    {
+        if (target != base.Owner)
+            return 1m;
+        if (!props.HasFlag(ValueProp.Unpowered))
+            return 1m;
+
+        OrbModel? orb = OrbDamageScope.CurrentOrb;
+        if (orb == null || orb.Owner.Creature != dealer)
+            return 1m;
+        if (base.Applier?.Player != null && orb.Owner != base.Applier.Player)
+            return 1m;
+
+        return OrbDamageMultiplier;
+    }
+
+    public override Task AfterModifyingDamageAmount(CardModel? cardSource)
+    {
+        Flash();
+        return Task.CompletedTask;
+    }
+
+    public override async Task AfterTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
+    {
+        if (side == CombatSide.Enemy)
+        {
+            await PowerCmd.TickDownDuration(this);
+        }
+    }
+}
+
+/// <summary>
 /// STS1 Electrodynamics: Lightning hits ALL enemies.
-/// Implemented as a power that triggers additional lightning damage on non-primary targets.
-/// For simplicity, channels a Lightning for each enemy when lightning evokes.
+/// After a Lightning orb evokes, deal the same damage to all enemies not already hit.
 /// </summary>
 public sealed class ElectrodynamicsPower_C : PowerModel
 {
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    // Electrodynamics is passive; the actual AoE lightning behavior
-    // would require deep orb-evoke hooks. As a simplified version,
-    // this power is a marker -- real effect handled by orb evoke patches if needed.
+    public override async Task AfterOrbEvoked(PlayerChoiceContext choiceContext, OrbModel orb, IEnumerable<Creature> targets)
+    {
+        if (orb is not LightningOrb lightning) return;
+        if (orb.Owner?.Creature != base.Owner) return;
+
+        var hitTargets = targets.ToHashSet();
+        var remaining = base.CombatState.GetOpponentsOf(base.Owner)
+            .Where(c => c.IsHittable && !hitTargets.Contains(c)).ToList();
+
+        if (remaining.Count > 0)
+        {
+            Flash();
+            foreach (Creature enemy in remaining)
+            {
+                VfxCmd.PlayOnCreature(enemy, "vfx/vfx_attack_lightning");
+            }
+            await CreatureCmd.Damage(choiceContext, remaining, lightning.EvokeVal, ValueProp.Unpowered, base.Owner, null);
+        }
+    }
 }
 
 /// <summary>
@@ -159,16 +278,16 @@ public sealed class MachineLearningPower_C : PowerModel
 
 /// <summary>
 /// STS1 Self Repair: At end of combat, heal Amount HP.
-/// Implemented via AfterCombatWon hook.
+/// Uses the victory-only hook so it does not trigger on non-victory combat exits.
 /// </summary>
 public sealed class SelfRepairPower_C : PowerModel
 {
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    public override async Task AfterCombatEnd(CombatRoom room)
+    public override async Task AfterCombatVictory(CombatRoom room)
     {
-        if (base.Owner.Player != null)
+        if (base.Owner.Player != null && !base.Owner.IsDead)
         {
             Flash();
             await CreatureCmd.Heal(base.Owner, base.Amount);
@@ -221,15 +340,106 @@ public sealed class HeatsinksPower_C : PowerModel
 }
 
 /// <summary>
+/// STS1 Rebound: The next card you play this turn goes on top of your draw pile instead of discard.
+/// </summary>
+public sealed class ReboundPower_C : PowerModel
+{
+    public override PowerType Type => PowerType.Buff;
+    public override PowerStackType StackType => PowerStackType.Counter;
+
+    public override async Task AfterCardPlayed(PlayerChoiceContext context, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner.Creature != base.Owner) return;
+        if (cardPlay.Card.Pile?.Type != PileType.Discard) return;
+
+        Flash();
+        await CardPileCmd.Add(cardPlay.Card, PileType.Draw, CardPilePosition.Top);
+        await PowerCmd.Remove(this);
+    }
+
+    public override async Task AfterTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
+    {
+        if (side == base.Owner.Side)
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
+}
+
+/// <summary>
+/// STS1 Amplify: Next Power card played this turn is played twice.
+/// Follows the BurstPower pattern (type-filtered duplication).
+/// </summary>
+public sealed class AmplifyPower_C : PowerModel
+{
+    public override PowerType Type => PowerType.Buff;
+    public override PowerStackType StackType => PowerStackType.Counter;
+
+    public override int ModifyCardPlayCount(CardModel card, Creature? target, int playCount)
+    {
+        if (card.Owner.Creature != base.Owner) return playCount;
+        if (card.Type != CardType.Power) return playCount;
+        return playCount + 1;
+    }
+
+    public override async Task AfterModifyingCardPlayCount(CardModel card)
+    {
+        if (card.Owner.Creature == base.Owner && card.Type == CardType.Power)
+        {
+            await PowerCmd.Decrement(this);
+        }
+    }
+
+    public override async Task AfterTurnEnd(PlayerChoiceContext choiceContext, CombatSide side)
+    {
+        if (side == base.Owner.Side)
+        {
+            await PowerCmd.Remove(this);
+        }
+    }
+}
+
+/// <summary>
 /// STS1 Echo Form: First card each turn is played twice.
-/// For simplicity, this is a marker power. Full implementation would require
-/// deep hooks into the card play pipeline.
+/// Uses ModifyCardPlayCount hook (same pattern as DuplicationPower).
+/// Amount = number of cards to double per turn.
 /// </summary>
 public sealed class EchoFormPower_C : PowerModel
 {
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    // Echo Form's double-play mechanic requires deep integration with the card play system.
-    // The power exists as a marker; the actual doubling would need play-system patches.
+    private int _doublesRemaining;
+
+    private int DoublesRemaining
+    {
+        get => _doublesRemaining;
+        set { AssertMutable(); _doublesRemaining = value; }
+    }
+
+    public override Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    {
+        if (side == base.Owner.Side)
+        {
+            DoublesRemaining = (int)base.Amount;
+        }
+        return Task.CompletedTask;
+    }
+
+    public override int ModifyCardPlayCount(CardModel card, Creature? target, int playCount)
+    {
+        if (card.Owner.Creature != base.Owner) return playCount;
+        if (DoublesRemaining <= 0) return playCount;
+        return playCount + 1;
+    }
+
+    public override Task AfterModifyingCardPlayCount(CardModel card)
+    {
+        if (card.Owner.Creature == base.Owner && DoublesRemaining > 0)
+        {
+            Flash();
+            DoublesRemaining--;
+        }
+        return Task.CompletedTask;
+    }
 }

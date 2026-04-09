@@ -1,5 +1,7 @@
 using System.Linq;
 using MegaCrit.Sts2.Core.CardSelection;
+using MegaCrit.Sts2.Core.Combat;
+using MegaCrit.Sts2.Core.Combat.History.Entries;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Commands.Builders;
 using MegaCrit.Sts2.Core.Entities.Cards;
@@ -38,8 +40,7 @@ public sealed class AllForOne_C : ClassicDefectCard
             .Execute(choiceContext);
         var zeroCostCards = PileType.Discard.GetPile(Owner).Cards
             .Where(c => c.EnergyCost.GetWithModifiers(CostModifiers.All) == 0
-                        && !c.EnergyCost.CostsX
-                        && c.Type != CardType.Status && c.Type != CardType.Curse)
+                        && !c.EnergyCost.CostsX)
             .ToList();
         foreach (CardModel card in zeroCostCards)
         {
@@ -161,7 +162,6 @@ public sealed class MeteorStrike_C : ClassicDefectCard
 }
 
 // STS1 Thunder Strike: 3 energy, deal 7 damage (9 upgraded) to a random enemy for each Lightning channeled this combat.
-// Simplified: deal damage times = current Lightning orb count.
 public sealed class ThunderStrike_C : ClassicDefectCard
 {
     protected override HashSet<CardTag> CanonicalTags => [CardTag.Strike];
@@ -179,7 +179,8 @@ public sealed class ThunderStrike_C : ClassicDefectCard
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        int lightningCount = Owner.PlayerCombatState.OrbQueue.Orbs.Count(o => o is LightningOrb);
+        int lightningCount = CombatManager.Instance.History.Entries.OfType<OrbChanneledEntry>()
+            .Count(e => e.Actor.Player == Owner && e.Orb is LightningOrb);
         if (lightningCount > 0)
         {
             await DamageCmd.Attack(DynamicVars.Damage.BaseValue)
@@ -201,7 +202,6 @@ public sealed class ThunderStrike_C : ClassicDefectCard
 // ═══════════════════════════════════════════════════════════════════
 
 // STS1 Amplify: 1 energy (0 upgraded), your next Power is played twice this turn.
-// Simplified: marker card. Full implementation would need play-pipeline hook.
 public sealed class Amplify_C : ClassicDefectCard
 {
     public Amplify_C()
@@ -212,7 +212,7 @@ public sealed class Amplify_C : ClassicDefectCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.TriggerAnim(Owner.Creature, "Cast", Owner.Character.CastAnimDelay);
-        // TODO: implement "next Power played twice" via a temporary power/hook
+        await PowerCmd.Apply<AmplifyPower_C>(Owner.Creature, 1m, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()
@@ -256,7 +256,7 @@ public sealed class MultiCast_C : ClassicDefectCard
 {
     protected override bool HasEnergyCostX => true;
 
-    public override OrbEvokeType OrbEvokeType => OrbEvokeType.All;
+    public override OrbEvokeType OrbEvokeType => OrbEvokeType.Front;
 
     public MultiCast_C()
         : base("multicast", -1, CardType.Skill, CardRarity.Rare, TargetType.Self)
@@ -292,8 +292,14 @@ public sealed class Recycle_C : ClassicDefectCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.TriggerAnim(Owner.Creature, "Cast", Owner.Character.CastAnimDelay);
-        CardSelectorPrefs prefs = new CardSelectorPrefs(SelectionScreenPrompt, 1);
         CardPile pile = PileType.Hand.GetPile(Owner);
+        int handCount = pile.Cards.Count();
+        if (handCount == 0)
+        {
+            return;
+        }
+
+        CardSelectorPrefs prefs = new CardSelectorPrefs(SelectionScreenPrompt, 1);
         CardModel card = (await CardSelectCmd.FromSimpleGrid(choiceContext, pile.Cards, Owner, prefs))
             .FirstOrDefault();
         if (card != null)

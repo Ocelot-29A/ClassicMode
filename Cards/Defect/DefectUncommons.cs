@@ -25,13 +25,16 @@ namespace ClassicModeMod;
 // ═══════════════════════════════════════════════════════════════════
 
 // STS1 Blizzard: 1 energy, deal damage equal to 2x (3x upgraded) number of Frost channeled this combat.
-// Simplified: deal 2 damage per Frost orb channeled. Targets ALL.
 public sealed class Blizzard_C : ClassicDefectCard
 {
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
-        new DynamicVar("PerFrost", 2m),
-        new DamageVar(0m, ValueProp.Move)
+        new CalculationBaseVar(0m),
+        new ExtraDamageVar(2m),
+        new CalculatedDamageVar(ValueProp.Move)
+            .WithMultiplier((CardModel card, Creature? _) =>
+                CombatManager.Instance.History.Entries.OfType<OrbChanneledEntry>()
+                    .Count(e => e.Actor.Player == card.Owner && e.Orb is FrostOrb))
     ];
 
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
@@ -45,23 +48,16 @@ public sealed class Blizzard_C : ClassicDefectCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         ArgumentNullException.ThrowIfNull(CombatState);
-        // Count Frost orbs currently channeled as a proxy
-        int frostCount = Owner.PlayerCombatState.OrbQueue.Orbs.Count(o => o is FrostOrb);
-        decimal damage = DynamicVars["PerFrost"].BaseValue * frostCount;
-        if (damage > 0)
-        {
-            DynamicVars.Damage.BaseValue = damage;
-            await DamageCmd.Attack(damage).FromCard(this)
-                .TargetingAllOpponents(CombatState)
-                .WithHitFx("vfx/vfx_attack_blunt")
-                .SpawningHitVfxOnEachCreature()
-                .Execute(choiceContext);
-        }
+        await DamageCmd.Attack(DynamicVars.CalculatedDamage).FromCard(this)
+            .TargetingAllOpponents(CombatState)
+            .WithHitFx("vfx/vfx_attack_blunt")
+            .SpawningHitVfxOnEachCreature()
+            .Execute(choiceContext);
     }
 
     protected override void OnUpgrade()
     {
-        DynamicVars["PerFrost"].UpgradeValueBy(1m);
+        DynamicVars.ExtraDamage.UpgradeValueBy(1m);
     }
 }
 
@@ -276,17 +272,16 @@ public sealed class Sunder_C : ClassicDefectCard
     }
 }
 
-// STS1 Lock-On: 1 energy, 9 damage (12 upgraded). Apply 1 (2 upgraded) Vulnerable + Focus-amplification marker.
-// Simplified to just damage + Vulnerable application.
+// STS1 Lock-On: 1 energy, 9 damage (12 upgraded). Apply 1 (2 upgraded) Lock-On.
 public sealed class Lockdown_C : ClassicDefectCard
 {
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-        [HoverTipFactory.FromPower<VulnerablePower>()];
+        [HoverTipFactory.FromPower<LockOnPower_C>()];
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
         new DamageVar(9m, ValueProp.Move),
-        new PowerVar<VulnerablePower>(1m)
+        new PowerVar<LockOnPower_C>(1m)
     ];
 
     public Lockdown_C()
@@ -300,19 +295,18 @@ public sealed class Lockdown_C : ClassicDefectCard
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
             .Execute(choiceContext);
-        await PowerCmd.Apply<VulnerablePower>(cardPlay.Target, DynamicVars.Vulnerable.BaseValue,
+        await PowerCmd.Apply<LockOnPower_C>(cardPlay.Target, DynamicVars["LockOnPower_C"].BaseValue,
             Owner.Creature, this);
     }
 
     protected override void OnUpgrade()
     {
         DynamicVars.Damage.UpgradeValueBy(3m);
-        DynamicVars.Vulnerable.UpgradeValueBy(1m);
+        DynamicVars["LockOnPower_C"].UpgradeValueBy(1m);
     }
 }
 
 // STS1 Rebound: 1 energy, 9 damage (12 upgraded). Next card played goes on top of draw pile.
-// Simplified to just dealing damage. Full rebound mechanic would need play-pipeline hook.
 public sealed class Rebound_C : ClassicDefectCard
 {
     protected override IEnumerable<DynamicVar> CanonicalVars =>
@@ -329,7 +323,7 @@ public sealed class Rebound_C : ClassicDefectCard
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_attack_slash")
             .Execute(choiceContext);
-        // TODO: implement "next card played goes on top of draw pile" via power/hook
+        await PowerCmd.Apply<ReboundPower_C>(Owner.Creature, 1m, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()
@@ -378,8 +372,7 @@ public sealed class AutoShields_C : ClassicDefectCard
 {
     public override bool GainsBlock => true;
 
-    protected override bool IsPlayable => Owner.Creature.Block == 0;
-    protected override bool ShouldGlowGoldInternal => IsPlayable;
+    protected override bool ShouldGlowGoldInternal => Owner.Creature.Block == 0;
 
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         [new BlockVar(11m, ValueProp.Move)];
@@ -391,7 +384,10 @@ public sealed class AutoShields_C : ClassicDefectCard
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
+        if (Owner.Creature.Block == 0)
+        {
+            await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
+        }
     }
 
     protected override void OnUpgrade()
@@ -566,8 +562,12 @@ public sealed class Darkness_C : ClassicDefectCard
     {
         await CreatureCmd.TriggerAnim(Owner.Creature, "Cast", Owner.Character.CastAnimDelay);
         await OrbCmd.Channel<DarkOrb>(choiceContext, Owner);
+        var orbQueue = Owner.PlayerCombatState?.OrbQueue;
+        if (orbQueue == null)
+            return;
+
         int triggerCount = IsUpgraded ? 2 : 1;
-        foreach (OrbModel orb in Owner.PlayerCombatState.OrbQueue.Orbs.Where(o => o is DarkOrb))
+        foreach (OrbModel orb in orbQueue.Orbs.Where(o => o is DarkOrb))
         {
             for (int i = 0; i < triggerCount; i++)
             {
@@ -625,27 +625,29 @@ public sealed class Fission_C : ClassicDefectCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.TriggerAnim(Owner.Creature, "Cast", Owner.Character.CastAnimDelay);
-        int orbCount = Owner.PlayerCombatState.OrbQueue.Orbs.Count;
-        if (orbCount > 0)
+        var orbQueue = Owner.PlayerCombatState?.OrbQueue;
+        if (orbQueue == null || orbQueue.Orbs.Count <= 0)
+            return;
+
+        int orbCount = orbQueue.Orbs.Count;
+        if (IsUpgraded)
         {
-            // Remove all orbs
             for (int i = 0; i < orbCount; i++)
             {
-                if (IsUpgraded)
-                {
-                    // Upgraded: evoke (trigger effect)
-                    await OrbCmd.EvokeNext(choiceContext, Owner);
-                }
-                else
-                {
-                    // Unupgraded: remove without evoking
-                    await OrbCmd.EvokeNext(choiceContext, Owner);
-                }
+                await OrbCmd.EvokeNext(choiceContext, Owner);
             }
-            int perOrb = IsUpgraded ? 2 : 1;
-            await PlayerCmd.GainEnergy(perOrb * orbCount, Owner);
-            await CardPileCmd.Draw(choiceContext, perOrb * orbCount, Owner);
         }
+        else
+        {
+            foreach (OrbModel orb in orbQueue.Orbs.ToList())
+            {
+                orbQueue.Remove(orb);
+                orb.RemoveInternal();
+            }
+        }
+
+        await PlayerCmd.GainEnergy(orbCount, Owner);
+        await CardPileCmd.Draw(choiceContext, orbCount, Owner);
     }
 }
 
@@ -662,6 +664,15 @@ public sealed class Forcefield_C : ClassicDefectCard
     {
     }
 
+    public override Task AfterCardPlayed(PlayerChoiceContext context, CardPlay cardPlay)
+    {
+        if (cardPlay.Card.Owner == Owner && cardPlay.Card.Type == CardType.Power)
+        {
+            EnergyCost.AddThisCombat(-1, reduceOnly: true);
+        }
+        return Task.CompletedTask;
+    }
+
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
@@ -671,8 +682,6 @@ public sealed class Forcefield_C : ClassicDefectCard
     {
         DynamicVars.Block.UpgradeValueBy(4m);
     }
-
-    // TODO: Implement cost reduction per Power played via combat tracker
 }
 
 // STS1 Fusion: 2 energy (1 upgraded), channel 1 Plasma.
@@ -828,8 +837,14 @@ public sealed class Hologram_C : ClassicDefectCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
-        CardSelectorPrefs prefs = new CardSelectorPrefs(SelectionScreenPrompt, 1);
         CardPile pile = PileType.Discard.GetPile(Owner);
+        int discardCount = pile.Cards.Count();
+        if (discardCount == 0)
+        {
+            return;
+        }
+
+        CardSelectorPrefs prefs = new CardSelectorPrefs(SelectionScreenPrompt, 1);
         CardModel card = (await CardSelectCmd.FromSimpleGrid(choiceContext, pile.Cards, Owner, prefs))
             .FirstOrDefault();
         if (card != null)
@@ -994,8 +1009,15 @@ public sealed class Seek_C : ClassicDefectCard
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         await CreatureCmd.TriggerAnim(Owner.Creature, "Cast", Owner.Character.CastAnimDelay);
-        CardSelectorPrefs prefs = new CardSelectorPrefs(SelectionScreenPrompt, DynamicVars.Cards.IntValue);
         CardPile pile = PileType.Draw.GetPile(Owner);
+        int availableCards = pile.Cards.Count();
+        if (availableCards == 0)
+        {
+            return;
+        }
+
+        int requestedCards = Math.Min(DynamicVars.Cards.IntValue, availableCards);
+        CardSelectorPrefs prefs = new CardSelectorPrefs(SelectionScreenPrompt, requestedCards);
         var chosen = await CardSelectCmd.FromSimpleGrid(choiceContext, pile.Cards, Owner, prefs);
         foreach (CardModel card in chosen)
         {

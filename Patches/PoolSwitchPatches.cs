@@ -5,12 +5,18 @@ using MegaCrit.Sts2.Core.Models.Characters;
 namespace ClassicModeMod;
 
 // ── Card Pool Patches ──
+// Hybrid takes precedence over Classic. If neither is on, the base getter runs.
 
 [HarmonyPatch(typeof(Ironclad), nameof(Ironclad.CardPool), MethodType.Getter)]
 internal static class IroncladCardPoolPatch
 {
     static bool Prefix(ref CardPoolModel __result)
     {
+        if (ClassicConfig.ClassicHybrid)
+        {
+            __result = ModelDb.CardPool<HybridIroncladCardPool>();
+            return false;
+        }
         if (!ClassicConfig.ClassicCards) return true;
         __result = ModelDb.CardPool<ClassicIroncladCardPool>();
         return false;
@@ -22,6 +28,11 @@ internal static class SilentCardPoolPatch
 {
     static bool Prefix(ref CardPoolModel __result)
     {
+        if (ClassicConfig.ClassicHybrid)
+        {
+            __result = ModelDb.CardPool<HybridSilentCardPool>();
+            return false;
+        }
         if (!ClassicConfig.ClassicCards) return true;
         __result = ModelDb.CardPool<ClassicSilentCardPool>();
         return false;
@@ -33,6 +44,11 @@ internal static class DefectCardPoolPatch
 {
     static bool Prefix(ref CardPoolModel __result)
     {
+        if (ClassicConfig.ClassicHybrid)
+        {
+            __result = ModelDb.CardPool<HybridDefectCardPool>();
+            return false;
+        }
         if (!ClassicConfig.ClassicCards) return true;
         __result = ModelDb.CardPool<ClassicDefectCardPool>();
         return false;
@@ -46,6 +62,11 @@ internal static class IroncladRelicPoolPatch
 {
     static bool Prefix(ref RelicPoolModel __result)
     {
+        if (ClassicConfig.ClassicHybrid)
+        {
+            __result = ModelDb.RelicPool<HybridIroncladRelicPool>();
+            return false;
+        }
         if (!ClassicConfig.ClassicRelics) return true;
         __result = ModelDb.RelicPool<ClassicIroncladRelicPool>();
         return false;
@@ -57,6 +78,11 @@ internal static class SilentRelicPoolPatch
 {
     static bool Prefix(ref RelicPoolModel __result)
     {
+        if (ClassicConfig.ClassicHybrid)
+        {
+            __result = ModelDb.RelicPool<HybridSilentRelicPool>();
+            return false;
+        }
         if (!ClassicConfig.ClassicRelics) return true;
         __result = ModelDb.RelicPool<ClassicSilentRelicPool>();
         return false;
@@ -68,6 +94,11 @@ internal static class DefectRelicPoolPatch
 {
     static bool Prefix(ref RelicPoolModel __result)
     {
+        if (ClassicConfig.ClassicHybrid)
+        {
+            __result = ModelDb.RelicPool<HybridDefectRelicPool>();
+            return false;
+        }
         if (!ClassicConfig.ClassicRelics) return true;
         __result = ModelDb.RelicPool<ClassicDefectRelicPool>();
         return false;

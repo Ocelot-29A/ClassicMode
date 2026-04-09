@@ -35,7 +35,10 @@ public sealed class FrozenCore : ClassicRelic
     {
         if (side != Owner.Creature.Side) return;
 
-        var orbQueue = Owner.PlayerCombatState.OrbQueue;
+        var orbQueue = Owner.PlayerCombatState?.OrbQueue;
+        if (orbQueue == null)
+            return;
+
         if (orbQueue.Orbs.Count < orbQueue.Capacity)
         {
             Flash();

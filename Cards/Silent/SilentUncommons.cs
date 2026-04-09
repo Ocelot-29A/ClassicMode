@@ -189,7 +189,6 @@ public sealed class EndlessAgony_C : ClassicSilentCard
         // When THIS card is drawn, add a copy to your hand
         if (card != this) return;
         var copy = CreateClone();
-        if (IsUpgraded) CardCmd.Upgrade(copy);
         await CardPileCmd.AddGeneratedCardToCombat(copy, PileType.Hand, addedByPlayer: true);
     }
 
@@ -208,9 +207,23 @@ public sealed class Eviscerate_C : ClassicSilentCard
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         [new DamageVar(7m, ValueProp.Move)];
 
+    private int DiscardsThisTurn =>
+        CombatManager.Instance.History.Entries.OfType<CardDiscardedEntry>()
+            .Count(e => e.HappenedThisTurn(CombatState) && e.Card.Owner == Owner);
+
     public Eviscerate_C()
         : base("eviscerate", 3, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
     {
+    }
+
+    public override bool TryModifyEnergyCostInCombat(CardModel card, decimal originalCost, out decimal modifiedCost)
+    {
+        modifiedCost = originalCost;
+        if (card != this) return false;
+        int discards = DiscardsThisTurn;
+        if (discards <= 0) return false;
+        modifiedCost = Math.Max(0m, originalCost - discards);
+        return true;
     }
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
@@ -396,6 +409,16 @@ public sealed class MasterfulStab_C : ClassicSilentCard
     {
     }
 
+    public override Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target,
+        DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
+    {
+        if (target == Owner.Creature && result.UnblockedDamage > 0)
+        {
+            EnergyCost.AddThisCombat(1);
+        }
+        return Task.CompletedTask;
+    }
+
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target);
@@ -452,7 +475,10 @@ public sealed class Predator_C : ClassicSilentCard
 public sealed class RiddleWithHoles_C : ClassicSilentCard
 {
     protected override IEnumerable<DynamicVar> CanonicalVars =>
-        [new DamageVar(3m, ValueProp.Move)];
+    [
+        new DamageVar(3m, ValueProp.Move),
+        new RepeatVar(5)
+    ];
 
     public RiddleWithHoles_C()
         : base("riddle_with_holes", 2, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
@@ -463,14 +489,14 @@ public sealed class RiddleWithHoles_C : ClassicSilentCard
     {
         ArgumentNullException.ThrowIfNull(cardPlay.Target);
         await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this).Targeting(cardPlay.Target)
-            .WithHitCount(5)
+            .WithHitCount(DynamicVars.Repeat.IntValue)
             .WithHitFx("vfx/vfx_dramatic_stab", null, "blunt_attack.mp3")
             .Execute(choiceContext);
     }
 
     protected override void OnUpgrade()
     {
-        DynamicVars.Damage.UpgradeValueBy(0m); // damage stays 3, hits go from 5 to 7
+        DynamicVars.Repeat.UpgradeValueBy(2m);
     }
 }
 
@@ -486,7 +512,7 @@ public sealed class Skewer_C : ClassicSilentCard
         [new DamageVar(7m, ValueProp.Move)];
 
     public Skewer_C()
-        : base("skewer", 0, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
+        : base("skewer", -1, CardType.Attack, CardRarity.Uncommon, TargetType.AnyEnemy)
     {
     }
 
@@ -604,8 +630,7 @@ public sealed class CalculatedGamble_C : ClassicSilentCard
 
     protected override void OnUpgrade()
     {
-        // Upgrade removes Exhaust (STS1 behavior)
-        // In STS2 pattern, upgrade adds Retain instead; we follow STS1.
+        RemoveKeyword(CardKeyword.Exhaust);
     }
 }
 
@@ -658,6 +683,8 @@ public sealed class Concentrate_C : ClassicSilentCard
         new DynamicVar("Discard", 3m),
         new EnergyVar(2)
     ];
+
+    protected override bool IsPlayable => PileType.Hand.GetPile(Owner).Cards.Count > DynamicVars["Discard"].IntValue;
 
     protected override IEnumerable<IHoverTip> ExtraHoverTips =>
         [EnergyHoverTip];
@@ -914,7 +941,7 @@ public sealed class PiercingWail_C : ClassicSilentCard
         ArgumentNullException.ThrowIfNull(CombatState);
         foreach (Creature enemy in CombatState.HittableEnemies)
         {
-            await PowerCmd.Apply<StrengthPower>(enemy, -DynamicVars["StrLoss"].BaseValue, Owner.Creature, this);
+            await PowerCmd.Apply<PiercingWailPower>(enemy, DynamicVars["StrLoss"].BaseValue, Owner.Creature, this);
         }
     }
 
@@ -964,9 +991,16 @@ public sealed class Reflex_C : ClassicSilentCard
     {
     }
 
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        // Unplayable - logic is in the discard trigger
+        return Task.CompletedTask;
+    }
+
+    public override async Task AfterCardDiscarded(PlayerChoiceContext choiceContext, CardModel card)
+    {
+        if (card != this)
+            return;
+
         await CardPileCmd.Draw(choiceContext, DynamicVars.Cards.BaseValue, Owner);
     }
 
@@ -994,8 +1028,8 @@ public sealed class Setup_C : ClassicSilentCard
             context: choiceContext, player: Owner, filter: null, source: this)).FirstOrDefault();
         if (selected != null)
         {
-            selected.SetToFreeThisTurn();
-            selected.AddKeyword(CardKeyword.Retain);
+            selected.EnergyCost.SetUntilPlayed(0, reduceOnly: true);
+            await CardPileCmd.Add(selected, PileType.Draw, CardPilePosition.Top);
         }
     }
 
@@ -1024,9 +1058,16 @@ public sealed class Tactician_C : ClassicSilentCard
     {
     }
 
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
+    protected override Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        // Unplayable - logic is in the discard trigger
+        return Task.CompletedTask;
+    }
+
+    public override async Task AfterCardDiscarded(PlayerChoiceContext choiceContext, CardModel card)
+    {
+        if (card != this)
+            return;
+
         await PlayerCmd.GainEnergy(DynamicVars.Energy.IntValue, Owner);
     }
 
