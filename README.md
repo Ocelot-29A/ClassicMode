@@ -96,8 +96,6 @@ directory, or by distributing one of the zips.
 ClassicMode/
 ├── Base/                 # Base card/relic classes
 ├── Cards/                # Ironclad / Silent / Defect card definitions
-├── Encounters/           # Classic bosses (Hexaghost, etc.)
-├── Monsters/             # Classic monster models
 ├── Patches/              # Harmony patches
 ├── Pools/                # Card / relic pool definitions
 ├── Powers/               # Classic power models

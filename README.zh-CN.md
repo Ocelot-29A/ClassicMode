@@ -93,8 +93,6 @@ build/
 ClassicMode/
 ├── Base/                 # 卡牌 / 遗物基类
 ├── Cards/                # 铁甲 / 静默 / 缺陷三个角色的卡牌定义
-├── Encounters/           # 经典 Boss（六头鬼等）
-├── Monsters/             # 经典怪物模型
 ├── Patches/              # Harmony 补丁
 ├── Pools/                # 卡池 / 遗物池定义
 ├── Powers/               # 经典能力模型
