@@ -111,12 +111,12 @@ See README.md for how to unpack Slay the Spire 1.
 # ---------------------------------------------------------------------------
 # Layout
 # ---------------------------------------------------------------------------
-$project        = Join-Path $projectDir "$modName.csproj"
-$outputRoot     = Join-Path $projectDir "build"
-$outputDir      = Join-Path $outputRoot $modName
-$buildDir       = Join-Path $projectDir "bin\Release\net9.0"
-$pckRoot        = Join-Path $outputDir "_pck_src"
-$pckPath        = Join-Path $outputDir "$modName.pck"
+$project = Join-Path $projectDir "$modName.csproj"
+$outputRoot = Join-Path $projectDir "build"
+$outputDir = Join-Path $outputRoot $modName
+$buildDir = Join-Path $projectDir "bin\Release\net9.0"
+$pckRoot = Join-Path $outputDir "_pck_src"
+$pckPath = Join-Path $outputDir "$modName.pck"
 
 Ensure-Dir $outputRoot
 Ensure-Dir $outputDir
@@ -130,7 +130,8 @@ Run build.ps1 once without -SkipAssets to generate _pck_src, then use -SkipAsset
 "@
   }
   Write-Host "Reusing existing PCK source: $pckRoot"
-} else {
+}
+else {
   if (Test-Path $pckRoot) {
     Remove-Item $pckRoot -Recurse -Force
   }
@@ -158,7 +159,8 @@ Copy-IfExists (Join-Path $projectDir "README.md") (Join-Path $outputDir "README.
 # ---------------------------------------------------------------------------
 if ($SkipAssets) {
   Write-Host "Skipping prepare_assets.py (as requested by -SkipAssets)"
-} else {
+}
+else {
   Write-Host "Preparing assets..."
   python (Join-Path $projectDir "prepare_assets.py") $projectDir $pckRoot $Sts1Dir
   if ($LASTEXITCODE -ne 0) {
