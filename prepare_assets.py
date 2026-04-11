@@ -132,6 +132,34 @@ _PORTRAIT_SOURCE_BASENAME_OVERRIDES = {
 _STS1_POWER_ICON_IMPORT_MAP = {
     "FLEX_POWER": {"small": "48/flex", "big": "128/flex"},
     "BERSERK_POWER_C": {"small": "48/berserk", "big": "128/berserk"},
+    "COMBUST_POWER_C": {"small": "48/combust", "big": "128/combust"},
+    "EVOLVE_POWER_C": {"small": "48/evolve", "big": "128/evolve"},
+    "FIRE_BREATHING_POWER_C": {"small": "48/firebreathing", "big": "128/firebreathing"},
+    "METALLICIZE_POWER_C": {"small": "48/armor", "big": "128/armor"},
+    "BRUTALITY_POWER_C": {"small": "48/brutality", "big": "128/brutality"},
+    "A_THOUSAND_CUTS_POWER": {"small": "48/thousandCuts", "big": "128/thousandCuts"},
+    "CHOKE_HOLD_POWER": {"small": "48/choke", "big": "128/choke"},
+    "CORPSE_EXPLOSION_POWER": {"small": "48/cExplosion", "big": "128/cExplosion"},
+    "PHANTASMAL_KILLER_POWER": {"small": "48/phantasmal", "big": "128/phantasmal"},
+    "ELECTRODYNAMICS_POWER_C": {"small": "48/channel", "big": "128/channel"},
+    "STATIC_DISCHARGE_POWER_C": {"small": "48/static_discharge", "big": "128/static_discharge"},
+    "CREATIVE_AI_POWER_C": {"small": "48/ai", "big": "128/ai"},
+    "HELLO_WORLD_POWER_C": {"small": "48/hello", "big": "128/hello"},
+    "STORM_POWER_C": {"small": "48/storm", "big": "128/storm"},
+    "MACHINE_LEARNING_POWER_C": {"small": "48/carddraw", "big": "128/carddraw"},
+    "SELF_REPAIR_POWER_C": {"small": "48/repair", "big": "128/repair"},
+    "LOOP_POWER_C": {"small": "48/loop", "big": "128/loop"},
+    "HEATSINKS_POWER_C": {"small": "48/heatsink", "big": "128/heatsink"},
+    "LOCK_ON_POWER_C": {"small": "48/lockon", "big": "128/lockon"},
+    "REBOUND_POWER_C": {"small": "48/rebound", "big": "128/rebound"},
+    "AMPLIFY_POWER_C": {"small": "48/amplify", "big": "128/amplify"},
+    "ECHO_FORM_POWER_C": {"small": "48/echo", "big": "128/echo"},
+    "RUPTURE_POWER_C": {"small": "48/rupture", "big": "128/rupture"},
+}
+
+_PLACEHOLDER_CASE_MAP = {
+    "amount": "Amount",
+    "magicnumber": "MagicNumber",
 }
 
 
@@ -610,56 +638,58 @@ _POWER_MAP = {
 # Hardcoded power descriptions (auto-generation from STS1 arrays is unreliable)
 _CUSTOM_POWER_LOC = {
     "eng": {
-        "FlexPower": {"NAME": "Flex", "DESCRIPTION": "Gain {Amount} Strength. At the end of your turn, lose {Amount} Strength."},
+        "FlexPower": {"NAME": "Strength Down", "DESCRIPTION": "Gain {Amount} Strength. At the end of your turn, lose {Amount} Strength."},
         "CombustPower_C": {"NAME": "Combust", "DESCRIPTION": "At the end of your turn, lose 1 HP and deal {Amount} damage to ALL enemies."},
         "EvolvePower_C": {"NAME": "Evolve", "DESCRIPTION": "Whenever you draw a Status card, draw {Amount} cards."},
         "FireBreathingPower_C": {"NAME": "Fire Breathing", "DESCRIPTION": "Whenever you draw a Status or Curse card, deal {Amount} damage to ALL enemies."},
         "MetallicizePower_C": {"NAME": "Metallicize", "DESCRIPTION": "At the end of your turn, gain {Amount} Block."},
         "BerserkPower_C": {"NAME": "Berserk", "DESCRIPTION": "At the start of your turn, gain {energyPrefix:energyIcons(1)}."},
         "BrutalityPower_C": {"NAME": "Brutality", "DESCRIPTION": "At the start of your turn, lose 1 HP and draw {Amount} cards."},
-        "AThousandCutsPower": {"NAME": "A Thousand Cuts", "DESCRIPTION": "Whenever you play a card, deal {Amount} damage to ALL enemies."},
-        "ChokeHoldPower": {"NAME": "Choke", "DESCRIPTION": "Whenever the player plays a card this turn, this enemy loses {Amount} HP."},
+        "RupturePower_C": {"NAME": "Rupture", "DESCRIPTION": "Whenever you lose HP from a card, gain {Amount} [gold]Strength[/gold]."},
+        "AThousandCutsPower": {"NAME": "Thousand Cuts", "DESCRIPTION": "Whenever you play a card, deal {Amount} damage to ALL enemies."},
+        "ChokeHoldPower": {"NAME": "Choked", "DESCRIPTION": "Whenever the player plays a card this turn, this enemy loses {Amount} HP."},
         "CorpseExplosionPower": {"NAME": "Corpse Explosion", "DESCRIPTION": "On death, deal damage equal to Max HP to ALL enemies."},
-        "PhantasmalKillerPower": {"NAME": "Phantasmal Killer", "DESCRIPTION": "Deal double damage next turn."},
-        "ElectrodynamicsPower_C": {"NAME": "Electrodynamics", "DESCRIPTION": "Lightning hits ALL enemies."},
+        "PhantasmalKillerPower": {"NAME": "Phantasmal", "DESCRIPTION": "Deal double damage next turn."},
+        "ElectrodynamicsPower_C": {"NAME": "Electro", "DESCRIPTION": "Lightning hits ALL enemies."},
         "StaticDischargePower_C": {"NAME": "Static Discharge", "DESCRIPTION": "Whenever you receive attack damage, Channel {Amount} Lightning."},
         "CreativeAiPower_C": {"NAME": "Creative AI", "DESCRIPTION": "At the start of your turn, add {Amount} random Power cards into your hand."},
-        "HelloWorldPower_C": {"NAME": "Hello World", "DESCRIPTION": "At the start of your turn, add a random Common card into your hand."},
+        "HelloWorldPower_C": {"NAME": "Hello", "DESCRIPTION": "At the start of your turn, add {Amount} random Common cards into your hand."},
         "StormPower_C": {"NAME": "Storm", "DESCRIPTION": "Whenever you play a Power card, Channel {Amount} Lightning."},
         "MachineLearningPower_C": {"NAME": "Machine Learning", "DESCRIPTION": "At the start of your turn, draw {Amount} additional cards."},
-        "SelfRepairPower_C": {"NAME": "Self Repair", "DESCRIPTION": "At the end of combat, heal {Amount} HP."},
+        "SelfRepairPower_C": {"NAME": "Repair", "DESCRIPTION": "At the end of combat, heal {Amount} HP."},
         "LoopPower_C": {"NAME": "Loop", "DESCRIPTION": "At the start of your turn, trigger the passive ability of your next Orb {Amount} times."},
-        "HeatsinksPower_C": {"NAME": "Heatsinks", "DESCRIPTION": "Whenever you play a Power card, draw {Amount} cards."},
+        "HeatsinksPower_C": {"NAME": "Heatsink", "DESCRIPTION": "Whenever you play a Power card, draw {Amount} cards."},
         "LockOnPower_C": {"NAME": "Lock-On", "DESCRIPTION": "Receives 50% more damage from Orbs for {Amount} turn(s)."},
         "ReboundPower_C": {"NAME": "Rebound", "DESCRIPTION": "The next card you play this turn is placed on top of your draw pile."},
         "AmplifyPower_C": {"NAME": "Amplify", "DESCRIPTION": "Your next Power card is played twice this turn."},
         "EchoFormPower_C": {"NAME": "Echo Form", "DESCRIPTION": "The first card you play each turn is played twice."},
     },
     "zhs": {
-        "FlexPower": {"NAME": "\u5f39\u6027", "DESCRIPTION": "\u83b7\u5f97 {Amount} \u70b9\u529b\u91cf\u3002\u56de\u5408\u7ed3\u675f\u65f6\uff0c\u5931\u53bb {Amount} \u70b9\u529b\u91cf\u3002"},
-        "CombustPower_C": {"NAME": "\u71c3\u70e7", "DESCRIPTION": "\u56de\u5408\u7ed3\u675f\u65f6\uff0c\u5931\u53bb 1 \u70b9\u751f\u547d\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210 {Amount} \u70b9\u4f24\u5bb3\u3002"},
+        "FlexPower": {"NAME": "\u6d3b\u52a8\u808c\u8089", "DESCRIPTION": "\u83b7\u5f97 {Amount} \u70b9\u529b\u91cf\u3002\u56de\u5408\u7ed3\u675f\u65f6\uff0c\u5931\u53bb {Amount} \u70b9\u529b\u91cf\u3002"},
+        "CombustPower_C": {"NAME": "\u81ea\u71c3", "DESCRIPTION": "\u56de\u5408\u7ed3\u675f\u65f6\uff0c\u5931\u53bb 1 \u70b9\u751f\u547d\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210 {Amount} \u70b9\u4f24\u5bb3\u3002"},
         "EvolvePower_C": {"NAME": "\u8fdb\u5316", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u62bd\u5230\u72b6\u6001\u724c\u65f6\uff0c\u62bd {Amount} \u5f20\u724c\u3002"},
-        "FireBreathingPower_C": {"NAME": "\u55b7\u706b", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u62bd\u5230\u72b6\u6001\u6216\u8bc5\u5492\u724c\u65f6\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210 {Amount} \u70b9\u4f24\u5bb3\u3002"},
+        "FireBreathingPower_C": {"NAME": "\u706b\u7130\u5410\u606f", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u62bd\u5230\u72b6\u6001\u6216\u8bc5\u5492\u724c\u65f6\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210 {Amount} \u70b9\u4f24\u5bb3\u3002"},
         "MetallicizePower_C": {"NAME": "\u91d1\u5c5e\u5316", "DESCRIPTION": "\u56de\u5408\u7ed3\u675f\u65f6\uff0c\u83b7\u5f97 {Amount} \u70b9\u683c\u6321\u3002"},
         "BerserkPower_C": {"NAME": "\u72c2\u66b4", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u83b7\u5f97{energyPrefix:energyIcons(1)}\u3002"},
         "BrutalityPower_C": {"NAME": "\u6b8b\u66b4", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5931\u53bb 1 \u70b9\u751f\u547d\uff0c\u62bd {Amount} \u5f20\u724c\u3002"},
+        "RupturePower_C": {"NAME": "\u6495\u88c2", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u56e0\u5361\u724c\u800c\u5931\u53bb\u751f\u547d\u65f6\uff0c\u83b7\u5f97{Amount}\u70b9[gold]\u529b\u91cf[/gold]\u3002"},
         "AThousandCutsPower": {"NAME": "\u51cc\u8fdf", "DESCRIPTION": "\u4f60\u6bcf\u6253\u51fa\u4e00\u5f20\u724c\uff0c\u5c31\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210 {Amount} \u70b9\u4f24\u5bb3\u3002"},
-        "ChokeHoldPower": {"NAME": "\u7a92\u606f", "DESCRIPTION": "\u73a9\u5bb6\u6bcf\u6253\u51fa\u4e00\u5f20\u724c\uff0c\u8be5\u654c\u4eba\u5931\u53bb {Amount} \u70b9\u751f\u547d\u3002"},
-        "CorpseExplosionPower": {"NAME": "\u5c38\u7206", "DESCRIPTION": "\u6b7b\u4ea1\u65f6\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210\u7b49\u540c\u6700\u5927\u751f\u547d\u503c\u7684\u4f24\u5bb3\u3002"},
-        "PhantasmalKillerPower": {"NAME": "\u5e7b\u5f71\u6740\u624b", "DESCRIPTION": "\u4e0b\u4e00\u56de\u5408\u9020\u6210\u53cc\u500d\u4f24\u5bb3\u3002"},
+        "ChokeHoldPower": {"NAME": "\u52d2\u8116", "DESCRIPTION": "\u73a9\u5bb6\u6bcf\u6253\u51fa\u4e00\u5f20\u724c\uff0c\u8be5\u654c\u4eba\u5931\u53bb {Amount} \u70b9\u751f\u547d\u3002"},
+        "CorpseExplosionPower": {"NAME": "\u5c38\u7206\u672f", "DESCRIPTION": "\u6b7b\u4ea1\u65f6\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210\u7b49\u540c\u6700\u5927\u751f\u547d\u503c\u7684\u4f24\u5bb3\u3002"},
+        "PhantasmalKillerPower": {"NAME": "\u5e7b\u5f71", "DESCRIPTION": "\u4e0b\u4e00\u56de\u5408\u9020\u6210\u53cc\u500d\u4f24\u5bb3\u3002"},
         "ElectrodynamicsPower_C": {"NAME": "\u7535\u52a8\u529b\u5b66", "DESCRIPTION": "\u95ea\u7535\u547d\u4e2d\u6240\u6709\u654c\u4eba\u3002"},
         "StaticDischargePower_C": {"NAME": "\u9759\u7535\u91ca\u653e", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u53d7\u5230\u653b\u51fb\u4f24\u5bb3\u65f6\uff0c\u5f15\u5bfc {Amount} \u4e2a\u95ea\u7535\u3002"},
-        "CreativeAiPower_C": {"NAME": "\u521b\u610f AI", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c06 {Amount} \u5f20\u968f\u673a\u80fd\u529b\u724c\u52a0\u5165\u4f60\u7684\u624b\u724c\u3002"},
-        "HelloWorldPower_C": {"NAME": "Hello World", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c06\u4e00\u5f20\u968f\u673a\u666e\u901a\u724c\u52a0\u5165\u4f60\u7684\u624b\u724c\u3002"},
-        "StormPower_C": {"NAME": "\u98ce\u66b4", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u6253\u51fa\u80fd\u529b\u724c\u65f6\uff0c\u5f15\u5bfc {Amount} \u4e2a\u95ea\u7535\u3002"},
+        "CreativeAiPower_C": {"NAME": "\u521b\u9020\u6027AI", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c06 {Amount} \u5f20\u968f\u673a\u80fd\u529b\u724c\u52a0\u5165\u4f60\u7684\u624b\u724c\u3002"},
+        "HelloWorldPower_C": {"NAME": "\u4f60\u597d", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c06{Amount}\u5f20\u968f\u673a\u666e\u901a\u724c\u52a0\u5165\u4f60\u7684\u624b\u724c\u3002"},
+        "StormPower_C": {"NAME": "\u96f7\u66b4", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u6253\u51fa\u80fd\u529b\u724c\u65f6\uff0c\u5f15\u5bfc {Amount} \u4e2a\u95ea\u7535\u3002"},
         "MachineLearningPower_C": {"NAME": "\u673a\u5668\u5b66\u4e60", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u989d\u5916\u62bd {Amount} \u5f20\u724c\u3002"},
-        "SelfRepairPower_C": {"NAME": "\u81ea\u6211\u4fee\u590d", "DESCRIPTION": "\u6218\u6597\u7ed3\u675f\u65f6\uff0c\u6062\u590d {Amount} \u70b9\u751f\u547d\u3002"},
+        "SelfRepairPower_C": {"NAME": "\u4fee\u7406", "DESCRIPTION": "\u6218\u6597\u7ed3\u675f\u65f6\uff0c\u6062\u590d {Amount} \u70b9\u751f\u547d\u3002"},
         "LoopPower_C": {"NAME": "\u5faa\u73af", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u89e6\u53d1\u4f60\u7684\u4e0b\u4e00\u4e2a\u5145\u80fd\u7403\u7684\u88ab\u52a8\u6548\u679c {Amount} \u6b21\u3002"},
-        "HeatsinksPower_C": {"NAME": "\u6563\u70ed\u5668", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u6253\u51fa\u80fd\u529b\u724c\u65f6\uff0c\u62bd {Amount} \u5f20\u724c\u3002"},
+        "HeatsinksPower_C": {"NAME": "\u6563\u70ed", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u6253\u51fa\u80fd\u529b\u724c\u65f6\uff0c\u62bd {Amount} \u5f20\u724c\u3002"},
         "LockOnPower_C": {"NAME": "\u8ddf\u8e2a\u9501\u5b9a", "DESCRIPTION": "\u4ece\u5145\u80fd\u7403\u53d7\u5230\u7684\u4f24\u5bb3\u589e\u52a0 50%\uff0c\u6301\u7eed {Amount} \u56de\u5408\u3002"},
         "ReboundPower_C": {"NAME": "\u5f39\u56de", "DESCRIPTION": "\u4f60\u5728\u8fd9\u4e2a\u56de\u5408\u6253\u51fa\u7684\u4e0b\u4e00\u5f20\u724c\u5c06\u4f1a\u88ab\u653e\u7f6e\u5230\u62bd\u724c\u5806\u7684\u9876\u90e8\u3002"},
         "AmplifyPower_C": {"NAME": "\u589e\u5e45", "DESCRIPTION": "\u5728\u8fd9\u4e2a\u56de\u5408\uff0c\u4f60\u7684\u4e0b\u4e00\u5f20\u80fd\u529b\u724c\u4f1a\u6253\u51fa\u4e24\u6b21\u3002"},
-        "EchoFormPower_C": {"NAME": "\u56de\u58f0\u5f62\u6001", "DESCRIPTION": "\u6bcf\u56de\u5408\u4f60\u6253\u51fa\u7684\u7b2c\u4e00\u5f20\u724c\u4f1a\u88ab\u6253\u51fa\u4e24\u6b21\u3002"},
+        "EchoFormPower_C": {"NAME": "\u56de\u54cd\u5f62\u6001", "DESCRIPTION": "\u6bcf\u56de\u5408\u4f60\u6253\u51fa\u7684\u7b2c\u4e00\u5f20\u724c\u4f1a\u88ab\u6253\u51fa\u4e24\u6b21\u3002"},
     },
 }
 
@@ -674,6 +704,18 @@ _CUSTOM_CARD_LOC = {
             "NAME": "Fan of Knives",
             "DESCRIPTION": "Deal {Damage:diff()} damage to ALL enemies.\nDraw {Cards:diff()} card."
         },
+        "Adrenaline_C": {
+            "NAME": "Adrenaline",
+            "DESCRIPTION": "Gain {Energy:energyIcons()}.\nDraw 2 cards."
+        },
+        "Storm_C": {
+            "NAME": "Storm",
+            "DESCRIPTION": "Whenever you play a Power card, Channel {Storm:diff()} Lightning."
+        },
+        "Loop_C": {
+            "NAME": "Loop",
+            "DESCRIPTION": "At the start of your turn, trigger the passive ability of your next [gold]Orb[/gold] {Loop:diff()} times."
+        },
     },
     "zhs": {
         "HexaghostBurnPlus": {
@@ -683,6 +725,18 @@ _CUSTOM_CARD_LOC = {
         "FanOfKnives_C": {
             "NAME": "万刃齐发",
             "DESCRIPTION": "对所有敌人造成{Damage:diff()}点伤害。\n抽{Cards:diff()}张牌。"
+        },
+        "Adrenaline_C": {
+            "NAME": "肾上腺素",
+            "DESCRIPTION": "获得{Energy:energyIcons()}。\n抽2张牌。"
+        },
+        "Storm_C": {
+            "NAME": "雷暴",
+            "DESCRIPTION": "你每打出一张能力牌，生成{Storm:diff()}个闪电[gold]充能球[/gold]。"
+        },
+        "Loop_C": {
+            "NAME": "循环",
+            "DESCRIPTION": "回合开始时，触发你的下一个[gold]充能球[/gold]的被动效果{Loop:diff()}次。"
         },
     },
 }
@@ -816,7 +870,12 @@ def _apply_zh_term_highlight_to_loc_dict(zhs_loc: dict, eng_loc: dict, label: st
     zh_to_en = {zh: en for zh, en in _TERM_HIGHLIGHT_MAP}
 
     for key in list(zhs_loc.keys()):
-        if not (key.endswith(".description") or key.endswith(".upgradedDescription")):
+        if not (
+            key.endswith(".description")
+            or key.endswith(".upgradedDescription")
+            or key.endswith(".smartDescription")
+            or key.endswith(".remoteDescription")
+        ):
             continue
 
         original = str(zhs_loc.get(key, ""))
@@ -842,6 +901,60 @@ def _apply_zh_term_highlight_to_loc_dict(zhs_loc: dict, eng_loc: dict, label: st
     print(f"  [{label}] zh spacing/highlight changes: {changed_desc_count}")
     print(f"  [{label}] en highlight sync changes: {changed_en_count}")
     print(f"  [{label}] terms highlighted: {terms_text}")
+
+
+def _normalize_placeholder_case_in_loc_dict(loc: dict, label: str):
+    """Fix known unresolved lowercase placeholders like {amount} -> {Amount}."""
+    changed = 0
+
+    def fix_text(text: str) -> str:
+        if not text:
+            return text
+
+        def repl(match: re.Match) -> str:
+            key = match.group(1)
+            suffix = match.group(2) or ""
+            mapped = _PLACEHOLDER_CASE_MAP.get(key.lower(), key)
+            return "{" + mapped + suffix + "}"
+
+        return re.sub(r"\{([A-Za-z_][A-Za-z0-9_]*)(:[^}]*)?\}", repl, text)
+
+    for key in list(loc.keys()):
+        value = loc.get(key)
+        if not isinstance(value, str):
+            continue
+        fixed = fix_text(value)
+        if fixed != value:
+            loc[key] = fixed
+            changed += 1
+
+    print(f"  [{label}] placeholder case fixes: {changed}")
+
+
+def _normalize_power_amount_diff(loc: dict, label: str):
+    """Normalize power Amount placeholders to a stable blue-highlighted variable style."""
+    changed = 0
+
+    for key in list(loc.keys()):
+        if not (
+            key.endswith(".description")
+            or key.endswith(".smartDescription")
+            or key.endswith(".remoteDescription")
+        ):
+            continue
+
+        value = loc.get(key)
+        if not isinstance(value, str):
+            continue
+
+        # Power tooltip formatting does not reliably resolve `:diff()` in all paths.
+        # Render Amount as a normal dynamic variable with explicit blue color.
+        fixed = re.sub(r"\{Amount(?::diff\(\))?\}", "[blue]{Amount}[/blue]", value)
+        if fixed != value:
+            loc[key] = fixed
+            changed += 1
+
+    print(f"  [{label}] amount diff formatter fixes: {changed}")
 
 # Cards whose CanonicalVars declare `RepeatVar` rather than a MagicNumber
 # DynamicVar. The STS1 converter emits `{MagicNumber:diff()}` for `!M!`, but
@@ -1376,9 +1489,22 @@ def generate_localization(sts1_root, project_dir):
                 slug = _slugify(class_name)
                 power_loc[f"{slug}.title"] = entry["NAME"]
                 power_loc[f"{slug}.description"] = entry["DESCRIPTION"]
+                # Power hover text only injects {Amount} and dynamic vars through
+                # smartDescription path for mutable instances.
+                power_loc[f"{slug}.smartDescription"] = entry["DESCRIPTION"]
             power_loc_by_lang[lang] = power_loc
 
     # Run zh cleanup/highlight rules after both language card dictionaries are built.
+    for lang in langs:
+        if lang in card_loc_by_lang:
+            _normalize_placeholder_case_in_loc_dict(card_loc_by_lang[lang], f"cards/{lang}")
+        if lang in relic_loc_by_lang:
+            _normalize_placeholder_case_in_loc_dict(relic_loc_by_lang[lang], f"relics/{lang}")
+        if lang in power_loc_by_lang:
+            _normalize_placeholder_case_in_loc_dict(power_loc_by_lang[lang], f"powers/{lang}")
+            _normalize_power_amount_diff(power_loc_by_lang[lang], f"powers/{lang}")
+
+    # Run zh cleanup/highlight rules after both language dictionaries are built.
     if "eng" in card_loc_by_lang and "zhs" in card_loc_by_lang:
         _apply_zh_spacing_and_highlight(card_loc_by_lang["zhs"], card_loc_by_lang["eng"])
     if "eng" in relic_loc_by_lang and "zhs" in relic_loc_by_lang:

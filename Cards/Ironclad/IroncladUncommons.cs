@@ -966,12 +966,6 @@ public sealed class SpotWeakness_C : ClassicIroncladCard
 // STS1 Berserk: 0 energy, gain 2 Vulnerable to self (1 upgraded). At start of each turn, gain 1 energy.
 public sealed class Berserk_C : ClassicIroncladCard
 {
-    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-    [
-        HoverTipFactory.FromPower<VulnerablePower>(),
-        EnergyHoverTip
-    ];
-
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
         new PowerVar<VulnerablePower>(2m),
@@ -1086,9 +1080,6 @@ public sealed class FireBreathing_C : ClassicIroncladCard
 // STS1 Inflame: 1 energy, gain 2 Strength (3 upgraded). COLLISION.
 public sealed class Inflame_C : ClassicIroncladCard
 {
-    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-        [HoverTipFactory.FromPower<StrengthPower>()];
-
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         [new PowerVar<StrengthPower>(2m)];
 
@@ -1111,9 +1102,6 @@ public sealed class Inflame_C : ClassicIroncladCard
 // STS1 Juggernaut: 2 energy, whenever you gain Block, deal 5 damage to random enemy (7 upgraded). COLLISION.
 public sealed class Juggernaut_C : ClassicIroncladCard
 {
-    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-        [HoverTipFactory.FromPower<JuggernautPower>()];
-
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         [new PowerVar<JuggernautPower>(5m)];
 
@@ -1158,9 +1146,6 @@ public sealed class Metallicize_C : ClassicIroncladCard
 // STS1 Rupture: 1 energy, whenever you lose HP from a card, gain 1 Strength (2 upgraded). COLLISION.
 public sealed class Rupture_C : ClassicIroncladCard
 {
-    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-        [HoverTipFactory.FromPower<StrengthPower>()];
-
     protected override IEnumerable<DynamicVar> CanonicalVars =>
         [new PowerVar<StrengthPower>(1m)];
 
@@ -1171,7 +1156,7 @@ public sealed class Rupture_C : ClassicIroncladCard
 
     protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        await PowerCmd.Apply<RupturePower>(Owner.Creature, DynamicVars.Strength.BaseValue, Owner.Creature, this);
+        await PowerCmd.Apply<RupturePower_C>(Owner.Creature, DynamicVars.Strength.BaseValue, Owner.Creature, this);
     }
 
     protected override void OnUpgrade()

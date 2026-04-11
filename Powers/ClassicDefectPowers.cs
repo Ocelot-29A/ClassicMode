@@ -221,18 +221,21 @@ public sealed class HelloWorldPower_C : PowerModel
             return;
 
         Flash();
-        CardModel card = CardFactory.GetDistinctForCombat(
-            base.Owner.Player,
-            from c in base.Owner.Player.Character.CardPool.GetUnlockedCards(
-                base.Owner.Player.UnlockState,
-                base.Owner.Player.RunState.CardMultiplayerConstraint)
-            where c.Rarity == CardRarity.Common
-            select c,
-            1,
-            base.Owner.Player.RunState.Rng.CombatCardGeneration).FirstOrDefault();
-        if (card != null)
+        for (int i = 0; i < (int)base.Amount; i++)
         {
-            await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, addedByPlayer: true);
+            CardModel card = CardFactory.GetDistinctForCombat(
+                base.Owner.Player,
+                from c in base.Owner.Player.Character.CardPool.GetUnlockedCards(
+                    base.Owner.Player.UnlockState,
+                    base.Owner.Player.RunState.CardMultiplayerConstraint)
+                where c.Rarity == CardRarity.Common
+                select c,
+                1,
+                base.Owner.Player.RunState.Rng.CombatCardGeneration).FirstOrDefault();
+            if (card != null)
+            {
+                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, addedByPlayer: true);
+            }
         }
     }
 }
@@ -331,7 +334,9 @@ public sealed class HeatsinksPower_C : PowerModel
 
     public override async Task AfterCardPlayed(PlayerChoiceContext choiceContext, CardPlay cardPlay)
     {
-        if (cardPlay.Card.Owner.Creature == base.Owner && cardPlay.Card.Type == CardType.Power)
+        if (cardPlay.Card.Owner.Creature == base.Owner
+            && cardPlay.Card.Type == CardType.Power
+            && cardPlay.Card is not Heatsinks_C)
         {
             Flash();
             await CardPileCmd.Draw(choiceContext, base.Amount, base.Owner.Player);

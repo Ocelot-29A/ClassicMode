@@ -505,12 +505,6 @@ public sealed class ToolsOfTheTrade_C : ClassicSilentCard
 // ────────────────────────────────────────────────────────────────────────────
 public sealed class WraithForm_C : ClassicSilentCard
 {
-    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-    [
-        HoverTipFactory.FromPower<IntangiblePower>(),
-        HoverTipFactory.FromPower<DexterityPower>()
-    ];
-
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
         new PowerVar<IntangiblePower>(2m),
