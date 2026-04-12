@@ -114,6 +114,7 @@ _CARD_BASE_CLASS_TO_COLORS = {
     "ClassicIroncladCard": ("red", "ironclad"),
     "ClassicSilentCard": ("green", "silent"),
     "ClassicDefectCard": ("blue", "defect"),
+    "ClassicColorlessCard": ("colorless", "colorless"),
 }
 
 _CARD_TYPE_TO_PORTRAIT_SUBDIR = {
@@ -169,7 +170,7 @@ def _normalize_portrait_basename(name: str) -> str:
 
 def _build_portrait_source_index(base_dir: str):
     index = {}
-    for color_dir in ("red", "green", "blue"):
+    for color_dir in ("red", "green", "blue", "colorless"):
         color_index = {}
         for sub_dir in ("attack", "skill", "power"):
             path = os.path.join(base_dir, color_dir, sub_dir)
@@ -633,6 +634,8 @@ _POWER_MAP = {
     "LoopPower_C": "Loop",
     "HeatsinksPower_C": "Heatsink",
     "EchoFormPower_C": "Echo Form",
+    "SadisticNaturePower_C": "Sadistic",
+    "MagnetismPower_C": "Magnetism",
 }
 
 # Hardcoded power descriptions (auto-generation from STS1 arrays is unreliable)
@@ -663,6 +666,8 @@ _CUSTOM_POWER_LOC = {
         "ReboundPower_C": {"NAME": "Rebound", "DESCRIPTION": "The next card you play this turn is placed on top of your draw pile."},
         "AmplifyPower_C": {"NAME": "Amplify", "DESCRIPTION": "Your next Power card is played twice this turn."},
         "EchoFormPower_C": {"NAME": "Echo Form", "DESCRIPTION": "The first card you play each turn is played twice."},
+        "SadisticNaturePower_C": {"NAME": "Sadistic Nature", "DESCRIPTION": "Whenever you apply a debuff to an enemy, they take {Amount} damage."},
+        "MagnetismPower_C": {"NAME": "Magnetism", "DESCRIPTION": "At the start of your turn, add a random colorless card into your hand."},
     },
     "zhs": {
         "FlexPower": {"NAME": "\u6d3b\u52a8\u808c\u8089", "DESCRIPTION": "\u83b7\u5f97 {Amount} \u70b9\u529b\u91cf\u3002\u56de\u5408\u7ed3\u675f\u65f6\uff0c\u5931\u53bb {Amount} \u70b9\u529b\u91cf\u3002"},
@@ -678,10 +683,10 @@ _CUSTOM_POWER_LOC = {
         "CorpseExplosionPower": {"NAME": "\u5c38\u7206\u672f", "DESCRIPTION": "\u6b7b\u4ea1\u65f6\uff0c\u5bf9\u6240\u6709\u654c\u4eba\u9020\u6210\u7b49\u540c\u6700\u5927\u751f\u547d\u503c\u7684\u4f24\u5bb3\u3002"},
         "PhantasmalKillerPower": {"NAME": "\u5e7b\u5f71", "DESCRIPTION": "\u4e0b\u4e00\u56de\u5408\u9020\u6210\u53cc\u500d\u4f24\u5bb3\u3002"},
         "ElectrodynamicsPower_C": {"NAME": "\u7535\u52a8\u529b\u5b66", "DESCRIPTION": "\u95ea\u7535\u547d\u4e2d\u6240\u6709\u654c\u4eba\u3002"},
-        "StaticDischargePower_C": {"NAME": "\u9759\u7535\u91ca\u653e", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u53d7\u5230\u653b\u51fb\u4f24\u5bb3\u65f6\uff0c\u5f15\u5bfc {Amount} \u4e2a\u95ea\u7535\u3002"},
+        "StaticDischargePower_C": {"NAME": "\u9759\u7535\u91ca\u653e", "DESCRIPTION": "\u5f53\u4f60\u53d7\u5230[gold]\u653b\u51fb[/gold]\u4f24\u5bb3\u65f6\uff0c\n\u751f\u6210 [blue]{Amount}[/blue]\u4e2a[gold]\u95ea\u7535[/gold]\u5145\u80fd\u7403\u3002"},
         "CreativeAiPower_C": {"NAME": "\u521b\u9020\u6027AI", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c06 {Amount} \u5f20\u968f\u673a\u80fd\u529b\u724c\u52a0\u5165\u4f60\u7684\u624b\u724c\u3002"},
         "HelloWorldPower_C": {"NAME": "\u4f60\u597d", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c06{Amount}\u5f20\u968f\u673a\u666e\u901a\u724c\u52a0\u5165\u4f60\u7684\u624b\u724c\u3002"},
-        "StormPower_C": {"NAME": "\u96f7\u66b4", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u6253\u51fa\u80fd\u529b\u724c\u65f6\uff0c\u5f15\u5bfc {Amount} \u4e2a\u95ea\u7535\u3002"},
+        "StormPower_C": {"NAME": "\u96f7\u66b4", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u6253\u51fa\u80fd\u529b\u724c\u65f6\uff0c\u751f\u6210 {Amount} \u4e2a\u95ea\u7535\u5145\u80fd\u7403\u3002"},
         "MachineLearningPower_C": {"NAME": "\u673a\u5668\u5b66\u4e60", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u989d\u5916\u62bd {Amount} \u5f20\u724c\u3002"},
         "SelfRepairPower_C": {"NAME": "\u4fee\u7406", "DESCRIPTION": "\u6218\u6597\u7ed3\u675f\u65f6\uff0c\u6062\u590d {Amount} \u70b9\u751f\u547d\u3002"},
         "LoopPower_C": {"NAME": "\u5faa\u73af", "DESCRIPTION": "\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u89e6\u53d1\u4f60\u7684\u4e0b\u4e00\u4e2a\u5145\u80fd\u7403\u7684\u88ab\u52a8\u6548\u679c {Amount} \u6b21\u3002"},
@@ -690,6 +695,8 @@ _CUSTOM_POWER_LOC = {
         "ReboundPower_C": {"NAME": "\u5f39\u56de", "DESCRIPTION": "\u4f60\u5728\u8fd9\u4e2a\u56de\u5408\u6253\u51fa\u7684\u4e0b\u4e00\u5f20\u724c\u5c06\u4f1a\u88ab\u653e\u7f6e\u5230\u62bd\u724c\u5806\u7684\u9876\u90e8\u3002"},
         "AmplifyPower_C": {"NAME": "\u589e\u5e45", "DESCRIPTION": "\u5728\u8fd9\u4e2a\u56de\u5408\uff0c\u4f60\u7684\u4e0b\u4e00\u5f20\u80fd\u529b\u724c\u4f1a\u6253\u51fa\u4e24\u6b21\u3002"},
         "EchoFormPower_C": {"NAME": "\u56de\u54cd\u5f62\u6001", "DESCRIPTION": "\u6bcf\u56de\u5408\u4f60\u6253\u51fa\u7684\u7b2c\u4e00\u5f20\u724c\u4f1a\u88ab\u6253\u51fa\u4e24\u6b21\u3002"},
+        "SadisticNaturePower_C": {"NAME": "\u6b8b\u8650\u5929\u6027", "DESCRIPTION": "\u6bcf\u5f53\u4f60\u7ed9\u654c\u4eba\u65bd\u52a0\u8d1f\u9762\u72b6\u6001\u65f6\uff0c\u4f7f\u5176\u53d7\u5230 {Amount} \u70b9\u4f24\u5bb3\u3002"},
+        "MagnetismPower_C": {"NAME": "\u78c1\u529b", "DESCRIPTION": "\u5728\u4f60\u7684\u56de\u5408\u5f00\u59cb\u65f6\uff0c\u5c061\u5f20\u968f\u673a\u65e0\u8272\u724c\u52a0\u5165\u624b\u724c\u3002"},
     },
 }
 
@@ -716,6 +723,14 @@ _CUSTOM_CARD_LOC = {
             "NAME": "Loop",
             "DESCRIPTION": "At the start of your turn, trigger the passive ability of your next [gold]Orb[/gold] {Loop:diff()} times."
         },
+        "UltimateStrikeEvent_C": {
+            "NAME": "Ultimate Strike",
+            "DESCRIPTION": "Deal {Damage:diff()} damage."
+        },
+        "UltimateDefendEvent_C": {
+            "NAME": "Ultimate Defend",
+            "DESCRIPTION": "Gain {Block:diff()} [gold]Block[/gold]."
+        },
     },
     "zhs": {
         "HexaghostBurnPlus": {
@@ -736,7 +751,15 @@ _CUSTOM_CARD_LOC = {
         },
         "Loop_C": {
             "NAME": "循环",
-            "DESCRIPTION": "回合开始时，触发你的下一个[gold]充能球[/gold]的被动效果{Loop:diff()}次。"
+            "DESCRIPTION": "在你的回合开始时，使用你最右侧的1个[gold]充能球[/gold]的被动能力{Loop:diff()}次。"
+        },
+        "UltimateStrikeEvent_C": {
+            "NAME": "究极打击",
+            "DESCRIPTION": "造成{Damage:diff()}点伤害。"
+        },
+        "UltimateDefendEvent_C": {
+            "NAME": "究极防御",
+            "DESCRIPTION": "获得{Block:diff()}点[gold]格挡[/gold]。"
         },
     },
 }
@@ -755,6 +778,9 @@ _EXTRA_CARD_LOC = {
 
 # zh terminology that should be highlighted, and synced to the paired EN text.
 _TERM_HIGHLIGHT_MAP = [
+    ("\u653b\u51fb", "Attack"),
+    ("\u80fd\u529b\u724c", "Power card"),
+    ("\u95ea\u7535", "Lightning"),
     ("\u6613\u4f24", "Vulnerable"),
     ("\u865a\u5f31", "Weak"),
     ("\u4e2d\u6bd2", "Poison"),
@@ -948,13 +974,49 @@ def _normalize_power_amount_diff(loc: dict, label: str):
             continue
 
         # Power tooltip formatting does not reliably resolve `:diff()` in all paths.
-        # Render Amount as a normal dynamic variable with explicit blue color.
-        fixed = re.sub(r"\{Amount(?::diff\(\))?\}", "[blue]{Amount}[/blue]", value)
+        # Render Amount as a normal dynamic variable with explicit blue color,
+        # while preserving already-correct blue-wrapped variants.
+        marker = "__AMOUNT_BLUE_MARKER__"
+        protected = value.replace("[blue]{Amount}[/blue]", marker)
+        protected = protected.replace("[blue]{Amount:diff()}[/blue]", marker)
+        fixed = re.sub(r"\{Amount(?::diff\(\))?\}", "[blue]{Amount}[/blue]", protected)
+        fixed = fixed.replace(marker, "[blue]{Amount}[/blue]")
         if fixed != value:
             loc[key] = fixed
             changed += 1
 
     print(f"  [{label}] amount diff formatter fixes: {changed}")
+
+
+def _convert_sts1_markup_to_sts2(text: str) -> str:
+    """Convert STS1 inline markers (#y/#b/...) to STS2 rich tags."""
+    if not text:
+        return ""
+
+    v = text
+    v = re.sub(r"#b\s*(\{[^}]+\}|-?\d+)", r"[blue]\1[/blue]", v)
+    v = re.sub(r"#y\s*([^\s，。！？；：,.!?]+)", r"[gold]\1[/gold]", v)
+    v = re.sub(r"#[byrgp]", "", v)
+    v = re.sub(r"\bNL\b", "\n", v)
+    v = re.sub(r" +", " ", v).strip()
+    return v
+
+
+def _normalize_power_wording(desc: str, lang: str, slug: str) -> str:
+    """Apply canonical wording for generated power descriptions."""
+    if not desc:
+        return ""
+
+    if lang != "zhs":
+        return desc
+
+    if slug == "STATIC_DISCHARGE_POWER_C":
+        return "当你受到[gold]攻击[/gold]伤害时，\n生成 [blue]{Amount}[/blue]个[gold]闪电[/gold]充能球。"
+
+    if slug == "STORM_POWER_C":
+        return "每当你打出[gold]能力牌[/gold]时，生成 [blue]{Amount}[/blue]个[gold]闪电[/gold]充能球。"
+
+    return desc
 
 # Cards whose CanonicalVars declare `RepeatVar` rather than a MagicNumber
 # DynamicVar. The STS1 converter emits `{MagicNumber:diff()}` for `!M!`, but
@@ -1267,19 +1329,25 @@ def _apply_card_specific_desc_fixes(cls_name: str, lang: str, desc: str) -> str:
         "AThousandCuts_C": {"MagicNumber": "CutDamage"},
         "Accuracy_C": {"MagicNumber": "AccuracyPower"},
         "Aggregate_C": {"Cards": "Divisor"},
+        "BandageUp_C": {"MagicNumber": "Heal"},
         "BladeDance_C": {"MagicNumber": "Cards"},
+        "Blind_C": {"WeakPower": "Weak"},
         "Caltrops_C": {"MagicNumber": "ThornsPower"},
         "ChokeHold_C": {"MagicNumber": "Choke"},
         "Claw_C": {"MagicNumber": "Increase"},
         "CloakAndDagger_C": {"MagicNumber": "Cards"},
         "Concentrate_C": {"Cards": "Discard"},
         "CoreSurge_C": {"MagicNumber": "ArtifactPower"},
+        "DarkShackles_C": {"StrengthPower": "StrengthLoss"},
         "Expertise_C": {"Cards": "HandSize", "MagicNumber": "HandSize"},
         "Feed_C": {"MagicNumber": "MaxHp"},
         "FeelNoPain_C": {"MagicNumber": "Power", "Block": "Power"},
         "FlameBarrier_C": {"MagicNumber": "DamageBack"},
         "Ftl_C": {"MagicNumber": "PlayMax", "Cards": "PlayMax"},
+        "HandOfGreed_C": {"MagicNumber": "Gold"},
+        "JackOfAllTrades_C": {"MagicNumber": "Cards"},
             "Metallicize_C": {"Block": "MagicNumber"},
+        "Metamorphosis_C": {"MagicNumber": "Cards"},
         "GeneticAlgorithm_C": {"MagicNumber": "Increase"},
         "Heatsinks_C": {"Cards": "Heatsinks"},
         "HeavyBlade_C": {"Damage": "CalculatedDamage", "MagicNumber": "StrengthMultiplier"},
@@ -1287,12 +1355,19 @@ def _apply_card_specific_desc_fixes(cls_name: str, lang: str, desc: str) -> str:
         "Juggernaut_C": {"MagicNumber": "JuggernautPower"},
         "Lockdown_C": {"MagicNumber": "LockOnPower_C"},
         "Offering_C": {"Cards": "Draw"},
+        "Panache_C": {"MagicNumber": "Amount"},
+        "Panacea_C": {"MagicNumber": "ArtifactPower"},
         "Rage_C": {"MagicNumber": "RagePower", "Block": "RagePower"},
         "Rampage_C": {"MagicNumber": "Increase"},
+        "SadisticNature_C": {"MagicNumber": "Amount"},
         "SelfRepair_C": {"MagicNumber": "Heal"},
         "StaticDischarge_C": {"MagicNumber": "StaticDischarge"},
+        "TheBomb_C": {"MagicNumber": "Damage"},
+        "Trip_C": {"VulnerablePower": "Vulnerable"},
+        "Violence_C": {"MagicNumber": "Cards"},
         "WellLaidPlans_C": {"Cards": "RetainAmount"},
         "WraithForm_C": {"MagicNumber": "IntangiblePower"},
+        "Chrysalis_C": {"MagicNumber": "Cards"},
     }
     for old_name, new_name in rename_by_card.get(cls_name, {}).items():
         repl_var(old_name, new_name)
@@ -1310,6 +1385,7 @@ def _apply_card_specific_desc_fixes(cls_name: str, lang: str, desc: str) -> str:
         "Glacier_C": {"MagicNumber": "2"},
         "MeteorStrike_C": {"MagicNumber": "3"},
         "Nightmare_C": {"MagicNumber": "3"},
+        "PanicButton_C": {"MagicNumber": "2"},
         "RipAndTear_C": {"MagicNumber": "2"},
         "Streamline_C": {"MagicNumber": "1"},
         "Zap_C": {"MagicNumber": "1"},
@@ -1438,11 +1514,13 @@ def generate_localization(sts1_root, project_dir):
                         desc = desc.replace("{MagicNumber:", "{Repeat:")
                         desc = desc.replace("{MagicNumber}", "{Repeat}")
                     desc = _apply_card_specific_desc_fixes(cls_name, lang, desc)
-                    desc = _strip_auto_keyword_sentences(desc)
                     if cls_name in _X_PLUS_ONE_UPGRADE_DESC_CARDS:
                         desc = _inject_x_plus_one_if_upgraded(desc)
                     if lang == "zhs":
                         desc = _normalize_zhs_x_spacing(desc)
+                    # STS2 renders keyword tags (e.g. Exhaust/Innate/Ethereal) from card metadata.
+                    # Remove standalone keyword sentences copied from STS1 descriptions to avoid duplicates.
+                    desc = _strip_auto_keyword_sentences(desc)
                     card_loc[f"{model_key}.description"] = desc
                     card_loc[f"{model_key}.selectionScreenPrompt"] = default_prompt
                 else:
@@ -1487,11 +1565,13 @@ def generate_localization(sts1_root, project_dir):
             power_loc = {}
             for class_name, entry in power_src.items():
                 slug = _slugify(class_name)
+                desc = _convert_sts1_markup_to_sts2(entry["DESCRIPTION"])
+                desc = _normalize_power_wording(desc, lang, slug)
                 power_loc[f"{slug}.title"] = entry["NAME"]
-                power_loc[f"{slug}.description"] = entry["DESCRIPTION"]
+                power_loc[f"{slug}.description"] = desc
                 # Power hover text only injects {Amount} and dynamic vars through
                 # smartDescription path for mutable instances.
-                power_loc[f"{slug}.smartDescription"] = entry["DESCRIPTION"]
+                power_loc[f"{slug}.smartDescription"] = desc
             power_loc_by_lang[lang] = power_loc
 
     # Run zh cleanup/highlight rules after both language card dictionaries are built.

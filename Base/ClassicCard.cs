@@ -88,3 +88,31 @@ public abstract class ClassicDefectCard : CardModel
 
     public override IEnumerable<string> AllPortraitPaths => [PortraitPath, BetaPortraitPath];
 }
+
+/// <summary>Base card for Classic Colorless cards.</summary>
+public abstract class ClassicColorlessCard : CardModel
+{
+    private readonly string _portraitName;
+
+    protected ClassicColorlessCard(
+        string portraitName,
+        int canonicalEnergyCost,
+        CardType type,
+        CardRarity rarity,
+        TargetType targetType,
+        bool shouldShowInCardLibrary = true)
+        : base(canonicalEnergyCost, type, rarity, targetType, shouldShowInCardLibrary)
+    {
+        _portraitName = portraitName;
+    }
+
+    public override CardPoolModel Pool => ModelDb.CardPool<ColorlessCardPool>();
+
+    public override string PortraitPath =>
+        $"res://images/packed/card_portraits/classic/colorless/{_portraitName}.png";
+
+    public override string BetaPortraitPath =>
+        $"res://images/packed/card_portraits/classic/colorless/beta/{_portraitName}.png";
+
+    public override IEnumerable<string> AllPortraitPaths => [PortraitPath, BetaPortraitPath];
+}

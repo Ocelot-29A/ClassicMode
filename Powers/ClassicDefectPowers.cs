@@ -163,13 +163,24 @@ public sealed class StaticDischargePower_C : PowerModel
 
     public override async Task AfterDamageReceived(PlayerChoiceContext choiceContext, Creature target, DamageResult result, ValueProp props, Creature? dealer, CardModel? cardSource)
     {
-        if (target == base.Owner && result.UnblockedDamage > 0 && dealer != null)
+        if (target != base.Owner)
+            return;
+
+        // STS1 behavior: only direct enemy attack damage triggers this power.
+        // Non-attack HP loss (cards/powers) and 0 damage should not trigger.
+        if (result.UnblockedDamage <= 0)
+            return;
+        if (dealer == null || dealer == base.Owner || dealer.Side == base.Owner.Side)
+            return;
+        if (!props.HasFlag(ValueProp.Move))
+            return;
+        if (cardSource != null)
+            return;
+
+        Flash();
+        for (int i = 0; i < (int)base.Amount; i++)
         {
-            Flash();
-            for (int i = 0; i < (int)base.Amount; i++)
-            {
-                await OrbCmd.Channel<LightningOrb>(choiceContext, base.Owner.Player);
-            }
+            await OrbCmd.Channel<LightningOrb>(choiceContext, base.Owner.Player);
         }
     }
 }

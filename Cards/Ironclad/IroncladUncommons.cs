@@ -610,9 +610,6 @@ public sealed class FlameBarrier_C : ClassicIroncladCard
 
     public override bool GainsBlock => true;
 
-    protected override IEnumerable<IHoverTip> ExtraHoverTips =>
-        [HoverTipFactory.FromPower<FlameBarrierPower>()];
-
     protected override IEnumerable<DynamicVar> CanonicalVars =>
     [
         new BlockVar(12m, ValueProp.Move),

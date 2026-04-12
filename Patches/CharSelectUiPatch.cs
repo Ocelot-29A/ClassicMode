@@ -25,6 +25,9 @@ internal static class ClassicModePanel
     private static TickboxRow? _relicsRow;
     private static TickboxRow? _hybridRow;
     private static TickboxRow? _dedupeRow;
+    private static TickboxRow? _colorlessRow;
+    private static TickboxRow? _colorlessHybridRow;
+    private static TickboxRow? _colorlessDedupeRow;
     private static StartRunLobby? _lobby;
     private static bool _suppressLobbySync;
 
@@ -48,6 +51,9 @@ internal static class ClassicModePanel
         _relicsRow = null;
         _hybridRow = null;
         _dedupeRow = null;
+        _colorlessRow = null;
+        _colorlessHybridRow = null;
+        _colorlessDedupeRow = null;
         _lobby = null;
         _suppressLobbySync = false;
     }
@@ -100,6 +106,19 @@ internal static class ClassicModePanel
         // If no synced state is present (singleplayer/default), keep local config.
         if (modifiers == null || modifiers.Count == 0)
         {
+            // In multiplayer client mode, an empty list means host has all classic
+            // toggles off. Do not keep stale local values on clients.
+            if (!canEdit)
+            {
+                ClassicConfig.ClassicCards = false;
+                ClassicConfig.ClassicRelics = false;
+                ClassicConfig.ClassicHybrid = false;
+                ClassicConfig.HybridDedupe = false;
+                ClassicConfig.ClassicColorless = false;
+                ClassicConfig.ClassicColorlessHybrid = false;
+                ClassicConfig.ClassicColorlessDedupe = false;
+            }
+
             ApplyEditability(canEdit);
             RefreshCardToggleRows();
             return;
@@ -112,6 +131,9 @@ internal static class ClassicModePanel
             ClassicConfig.ClassicRelics = modifiers.Any(m => m is ClassicRelicsCustomModeModifier);
             ClassicConfig.ClassicHybrid = modifiers.Any(m => m is ClassicHybridCustomModeModifier);
             ClassicConfig.HybridDedupe = modifiers.Any(m => m is ClassicHybridDedupeCustomModeModifier);
+            ClassicConfig.ClassicColorless = modifiers.Any(m => m is ClassicColorlessCustomModeModifier);
+            ClassicConfig.ClassicColorlessHybrid = modifiers.Any(m => m is ClassicColorlessHybridCustomModeModifier);
+            ClassicConfig.ClassicColorlessDedupe = modifiers.Any(m => m is ClassicColorlessDedupeCustomModeModifier);
             RefreshCardToggleRows();
             ApplyEditability(canEdit);
         }
@@ -138,6 +160,12 @@ internal static class ClassicModePanel
             modifiers.Add(ModelDb.Modifier<ClassicHybridCustomModeModifier>().ToMutable());
         if (ClassicConfig.HybridDedupe)
             modifiers.Add(ModelDb.Modifier<ClassicHybridDedupeCustomModeModifier>().ToMutable());
+        if (ClassicConfig.ClassicColorless)
+            modifiers.Add(ModelDb.Modifier<ClassicColorlessCustomModeModifier>().ToMutable());
+        if (ClassicConfig.ClassicColorlessHybrid)
+            modifiers.Add(ModelDb.Modifier<ClassicColorlessHybridCustomModeModifier>().ToMutable());
+        if (ClassicConfig.ClassicColorlessDedupe)
+            modifiers.Add(ModelDb.Modifier<ClassicColorlessDedupeCustomModeModifier>().ToMutable());
 
         _lobby.SetModifiers(modifiers);
     }
@@ -154,11 +182,14 @@ internal static class ClassicModePanel
         _hybridRow?.SetEnabled(canEdit);
         // Dedupe still depends on Hybrid. Keep disabled if Hybrid is off.
         _dedupeRow?.SetEnabled(canEdit && ClassicConfig.ClassicHybrid);
+        _colorlessRow?.SetEnabled(canEdit);
+        _colorlessHybridRow?.SetEnabled(canEdit);
+        _colorlessDedupeRow?.SetEnabled(canEdit && ClassicConfig.ClassicColorlessHybrid);
     }
 
     private static void RefreshCardToggleRows()
     {
-        if (_cardsRow == null || _hybridRow == null || _dedupeRow == null)
+        if (_cardsRow == null || _hybridRow == null || _dedupeRow == null || _colorlessRow == null || _colorlessHybridRow == null || _colorlessDedupeRow == null)
             return;
 
         // Hybrid is mutually exclusive with pure classic card mode.
@@ -167,12 +198,21 @@ internal static class ClassicModePanel
             ClassicConfig.ClassicCards = false;
         }
 
+        if (ClassicConfig.ClassicColorlessHybrid && ClassicConfig.ClassicColorless)
+        {
+            ClassicConfig.ClassicColorless = false;
+        }
+
         _cardsRow.SetValueSilently(ClassicConfig.ClassicCards);
         _hybridRow.SetValueSilently(ClassicConfig.ClassicHybrid);
         _dedupeRow.SetValueSilently(ClassicConfig.HybridDedupe);
+        _colorlessRow.SetValueSilently(ClassicConfig.ClassicColorless);
+        _colorlessHybridRow.SetValueSilently(ClassicConfig.ClassicColorlessHybrid);
+        _colorlessDedupeRow.SetValueSilently(ClassicConfig.ClassicColorlessDedupe);
 
         // Dedupe only has effect under Hybrid mode.
         _dedupeRow.SetEnabled(CanLocalEditLobby() && ClassicConfig.ClassicHybrid);
+        _colorlessDedupeRow.SetEnabled(CanLocalEditLobby() && ClassicConfig.ClassicColorlessHybrid);
     }
 
     private static PanelContainer BuildPanel()
@@ -220,7 +260,7 @@ internal static class ClassicModePanel
         vbox.AddChild(sep);
 
         // Card toggle
-        _cardsRow = new TickboxRow("Classic Cards", "\u7ecf\u5178\u5361\u724c", font,
+        _cardsRow = new TickboxRow("Classic Character Cards", "\u7ecf\u5178\u89d2\u8272\u5361\u724c", font,
             ClassicConfig.ClassicCards, on =>
             {
                 if (on && ClassicConfig.ClassicHybrid)
@@ -232,28 +272,8 @@ internal static class ClassicModePanel
             });
         vbox.AddChild(_cardsRow);
 
-        // Relic toggle
-        _relicsRow = new TickboxRow("Classic Relics", "\u7ecf\u5178\u9057\u7269", font,
-            ClassicConfig.ClassicRelics, on =>
-            {
-                ClassicConfig.ClassicRelics = on;
-                SyncLobbyFromLocalConfig();
-                Log.Info($"[ClassicMode] Classic Relics: {on}");
-            });
-        vbox.AddChild(_relicsRow);
-
-        // Divider above hybrid master toggle
-        var sep2 = new HSeparator();
-        sep2.AddThemeConstantOverride("separation", 2);
-        sep2.AddThemeStyleboxOverride("separator", new StyleBoxLine
-        {
-            Color = new Color(0.55f, 0.42f, 0.18f, 0.4f),
-            Thickness = 1
-        });
-        vbox.AddChild(sep2);
-
         // Hybrid (STS1 + STS2 merged pools) master toggle
-        _hybridRow = new TickboxRow("Hybrid Mode", "\u6df7\u5408\u6a21\u5f0f", font,
+        _hybridRow = new TickboxRow("Hybrid Character Cards", "\u6df7\u5408\u89d2\u8272\u5361\u724c", font,
             ClassicConfig.ClassicHybrid, on =>
             {
                 ClassicConfig.ClassicHybrid = on;
@@ -280,6 +300,79 @@ internal static class ClassicModePanel
                 Log.Info($"[ClassicMode] Hybrid Dedupe: {on}");
             });
         vbox.AddChild(_dedupeRow);
+
+        // Divider between character cards and colorless cards
+        var sep2 = new HSeparator();
+        sep2.AddThemeConstantOverride("separation", 2);
+        sep2.AddThemeStyleboxOverride("separator", new StyleBoxLine
+        {
+            Color = new Color(0.55f, 0.42f, 0.18f, 0.4f),
+            Thickness = 1
+        });
+        vbox.AddChild(sep2);
+
+        _colorlessRow = new TickboxRow("Classic Colorless", "\u7ecf\u5178\u65e0\u8272\u724c", font,
+            ClassicConfig.ClassicColorless, on =>
+            {
+                ClassicConfig.ClassicColorless = on;
+                if (on && ClassicConfig.ClassicColorlessHybrid)
+                    ClassicConfig.ClassicColorlessHybrid = false;
+                if (!on && !ClassicConfig.ClassicColorlessHybrid)
+                    ClassicConfig.ClassicColorlessDedupe = false;
+                RefreshCardToggleRows();
+                SyncLobbyFromLocalConfig();
+                Log.Info($"[ClassicMode] Classic Colorless Only: {on}");
+            });
+        vbox.AddChild(_colorlessRow);
+
+        _colorlessHybridRow = new TickboxRow("Hybrid Colorless", "\u6df7\u5408\u65e0\u8272\u724c", font,
+            ClassicConfig.ClassicColorlessHybrid, on =>
+            {
+                ClassicConfig.ClassicColorlessHybrid = on;
+                if (on && ClassicConfig.ClassicColorless)
+                    ClassicConfig.ClassicColorless = false;
+                if (!on)
+                    ClassicConfig.ClassicColorlessDedupe = false;
+                RefreshCardToggleRows();
+                SyncLobbyFromLocalConfig();
+                Log.Info($"[ClassicMode] Hybrid Colorless: {on}");
+            });
+        vbox.AddChild(_colorlessHybridRow);
+
+        _colorlessDedupeRow = new TickboxRow("Colorless Dedupe", "\u65e0\u8272\u540c\u540d\u53bb\u91cd", font,
+            ClassicConfig.ClassicColorlessDedupe, on =>
+            {
+                if (!ClassicConfig.ClassicColorlessHybrid)
+                {
+                    RefreshCardToggleRows();
+                    return;
+                }
+                ClassicConfig.ClassicColorlessDedupe = on;
+                RefreshCardToggleRows();
+                SyncLobbyFromLocalConfig();
+                Log.Info($"[ClassicMode] Classic Colorless Dedupe: {on}");
+            });
+        vbox.AddChild(_colorlessDedupeRow);
+
+        // Divider between colorless cards and relics
+        var sep3 = new HSeparator();
+        sep3.AddThemeConstantOverride("separation", 2);
+        sep3.AddThemeStyleboxOverride("separator", new StyleBoxLine
+        {
+            Color = new Color(0.55f, 0.42f, 0.18f, 0.4f),
+            Thickness = 1
+        });
+        vbox.AddChild(sep3);
+
+        // Relic toggle
+        _relicsRow = new TickboxRow("Classic Relics", "\u7ecf\u5178\u9057\u7269", font,
+            ClassicConfig.ClassicRelics, on =>
+            {
+                ClassicConfig.ClassicRelics = on;
+                SyncLobbyFromLocalConfig();
+                Log.Info($"[ClassicMode] Classic Relics: {on}");
+            });
+        vbox.AddChild(_relicsRow);
 
         RefreshCardToggleRows();
 

@@ -4,7 +4,7 @@
   "CHAMPION_BELT.title": "冠军腰带",
   "CHAMPION_BELT.description": "每当你施加[gold]易伤[/gold]时，施加{WeakAmount}层[gold]虚弱[/gold]。",
   "WRIST_BLADE.title": "腕刃",
-  "WRIST_BLADE.description": "0耗能的攻击造成额外{ExtraDamage}点伤害。",
+  "WRIST_BLADE.description": "0耗能的[gold]攻击[/gold]造成额外{ExtraDamage}点伤害。",
   "HOVERING_KITE.title": "悬浮风筝",
   "HOVERING_KITE.description": "每回合第一次丢弃牌时，获得{energyPrefix:energyIcons(1)}。",
   "THE_SPECIMEN.title": "标本",
