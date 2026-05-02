@@ -42,11 +42,23 @@ public sealed class ClassicCardsCustomModeModifier : ClassicCustomModeModifierBa
     public override LocString Description => new("modifiers", "CLASSIC_CUSTOM_CARDS.description");
 }
 
-public sealed class ClassicRelicsCustomModeModifier : ClassicCustomModeModifierBase
+public sealed class AddClassicRelicsCustomModeModifier : ClassicCustomModeModifierBase
 {
-    public override LocString Title => new("modifiers", "CLASSIC_CUSTOM_RELICS.title");
+    public override LocString Title => new("modifiers", "CLASSIC_CUSTOM_ADD_RELICS.title");
 
-    public override LocString Description => new("modifiers", "CLASSIC_CUSTOM_RELICS.description");
+    public override LocString Description => new("modifiers", "CLASSIC_CUSTOM_ADD_RELICS.description");
+}
+
+public class OnlyClassicRelicsCustomModeModifier : ClassicCustomModeModifierBase
+{
+    public override LocString Title => new("modifiers", "CLASSIC_CUSTOM_ONLY_RELICS.title");
+
+    public override LocString Description => new("modifiers", "CLASSIC_CUSTOM_ONLY_RELICS.description");
+}
+
+// Legacy compatibility with previous runs/modifier snapshots.
+public sealed class ClassicRelicsCustomModeModifier : OnlyClassicRelicsCustomModeModifier
+{
 }
 
 public sealed class ClassicHybridCustomModeModifier : ClassicCustomModeModifierBase

@@ -11,7 +11,8 @@ public static class ClassicConfig
         "classic_config.json");
 
     private static bool _classicCards;
-    private static bool _classicRelics;
+    private static bool _addClassicRelics;
+    private static bool _onlyClassicRelics;
     private static bool _classicHybrid;
     private static bool _hybridDedupe;
     private static bool _classicColorless;
@@ -36,16 +37,35 @@ public static class ClassicConfig
         }
     }
 
-    public static bool ClassicRelics
+    public static bool AddClassicRelics
     {
-        get => _classicRelics;
+        get => _addClassicRelics;
         set
         {
-            if (_classicRelics == value) return;
-            _classicRelics = value;
+            if (_addClassicRelics == value) return;
+            _addClassicRelics = value;
             HybridPoolCache.InvalidateAll();
             Save();
         }
+    }
+
+    public static bool OnlyClassicRelics
+    {
+        get => _onlyClassicRelics;
+        set
+        {
+            if (_onlyClassicRelics == value) return;
+            _onlyClassicRelics = value;
+            HybridPoolCache.InvalidateAll();
+            Save();
+        }
+    }
+
+    // Backward-compat alias for old code paths.
+    public static bool ClassicRelics
+    {
+        get => OnlyClassicRelics;
+        set => OnlyClassicRelics = value;
     }
 
     /// <summary>
@@ -167,7 +187,8 @@ public static class ClassicConfig
                 if (data != null)
                 {
                     _classicCards = data.ClassicCards;
-                    _classicRelics = data.ClassicRelics;
+                    _addClassicRelics = data.AddClassicRelics;
+                    _onlyClassicRelics = data.OnlyClassicRelics || data.ClassicRelics;
                     _classicHybrid = data.ClassicHybrid;
                     _hybridDedupe = data.HybridDedupe;
                     _classicColorless = data.ClassicColorless;
@@ -176,7 +197,7 @@ public static class ClassicConfig
                     _colorlessCardRewards = data.ColorlessCardRewards;
                     _markClassicCardOrigin = data.MarkClassicCardOrigin;
                 }
-                Log.Info($"[ClassicMode] Config loaded: Cards={_classicCards}, Relics={_classicRelics}, Hybrid={_classicHybrid}, Dedupe={_hybridDedupe}, ColorlessClassic={_classicColorless}, ColorlessHybrid={_classicColorlessHybrid}, ColorlessDedupe={_classicColorlessDedupe}, ColorlessRewards={_colorlessCardRewards}, MarkSTS1={_markClassicCardOrigin}");
+                Log.Info($"[ClassicMode] Config loaded: Cards={_classicCards}, AddRelics={_addClassicRelics}, OnlyRelics={_onlyClassicRelics}, HybridCards={_classicHybrid}, Dedupe={_hybridDedupe}, ColorlessClassic={_classicColorless}, ColorlessHybrid={_classicColorlessHybrid}, ColorlessDedupe={_classicColorlessDedupe}, ColorlessRewards={_colorlessCardRewards}, MarkSTS1={_markClassicCardOrigin}");
             }
         }
         catch (Exception ex)
@@ -192,7 +213,9 @@ public static class ClassicConfig
             var data = new ConfigData
             {
                 ClassicCards = _classicCards,
-                ClassicRelics = _classicRelics,
+                AddClassicRelics = _addClassicRelics,
+                OnlyClassicRelics = _onlyClassicRelics,
+                ClassicRelics = _onlyClassicRelics,
                 ClassicHybrid = _classicHybrid,
                 HybridDedupe = _hybridDedupe,
                 ClassicColorless = _classicColorless,
@@ -212,6 +235,9 @@ public static class ClassicConfig
     private class ConfigData
     {
         public bool ClassicCards { get; set; }
+        public bool AddClassicRelics { get; set; }
+        public bool OnlyClassicRelics { get; set; }
+        // Legacy field for backward compatibility.
         public bool ClassicRelics { get; set; }
         public bool ClassicHybrid { get; set; }
         public bool HybridDedupe { get; set; }

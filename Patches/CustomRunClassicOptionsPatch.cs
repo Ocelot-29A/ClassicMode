@@ -23,7 +23,8 @@ internal static class CustomRunAddClassicOptionsPatch
         AppendIfMissing<ClassicColorlessHybridCustomModeModifier>(list);
         AppendIfMissing<ClassicColorlessDedupeCustomModeModifier>(list);
         AppendIfMissing<ColorlessCardRewardsCustomModeModifier>(list);
-        AppendIfMissing<ClassicRelicsCustomModeModifier>(list);
+        AppendIfMissing<AddClassicRelicsCustomModeModifier>(list);
+        AppendIfMissing<OnlyClassicRelicsCustomModeModifier>(list);
 
         __result = list;
     }
@@ -94,7 +95,9 @@ internal static class CustomRunClassicOptionsApplyToConfigPatch
         // Always apply from the synchronized modifier list; in multiplayer,
         // host is authoritative and clients follow the host's selections.
         ClassicConfig.ClassicCards = normalized.Any(m => m is ClassicCardsCustomModeModifier);
-        ClassicConfig.ClassicRelics = normalized.Any(m => m is ClassicRelicsCustomModeModifier);
+        ClassicConfig.AddClassicRelics = normalized.Any(m => m is AddClassicRelicsCustomModeModifier);
+        ClassicConfig.OnlyClassicRelics = normalized.Any(m => m is OnlyClassicRelicsCustomModeModifier)
+            || normalized.Any(m => m is ClassicRelicsCustomModeModifier);
         ClassicConfig.ClassicHybrid = normalized.Any(m => m is ClassicHybridCustomModeModifier);
         ClassicConfig.HybridDedupe = normalized.Any(m => m is ClassicHybridDedupeCustomModeModifier);
         ClassicConfig.ClassicColorless = normalized.Any(m => m is ClassicColorlessCustomModeModifier);
@@ -210,7 +213,8 @@ internal static class CustomRunClassicOptionsRules
             return;
 
         Find<ClassicCardsCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ClassicCards);
-        Find<ClassicRelicsCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ClassicRelics);
+        Find<AddClassicRelicsCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.AddClassicRelics);
+        Find<OnlyClassicRelicsCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.OnlyClassicRelics);
         Find<ClassicHybridCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ClassicHybrid);
         Find<ClassicHybridDedupeCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.HybridDedupe);
         Find<ClassicColorlessCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ClassicColorless);
@@ -236,6 +240,8 @@ internal static class CustomRunClassicOptionsRules
         var localCanEdit = CanLocalPlayerEdit(list);
 
         var cards = Find<ClassicCardsCustomModeModifier>(tickboxes);
+        var addRelics = Find<AddClassicRelicsCustomModeModifier>(tickboxes);
+        var onlyRelics = Find<OnlyClassicRelicsCustomModeModifier>(tickboxes);
         var hybrid = Find<ClassicHybridCustomModeModifier>(tickboxes);
         var dedupe = Find<ClassicHybridDedupeCustomModeModifier>(tickboxes);
         var colorless = Find<ClassicColorlessCustomModeModifier>(tickboxes);
@@ -258,6 +264,21 @@ internal static class CustomRunClassicOptionsRules
         if ((hybrid?.IsTicked ?? false) && (cards?.IsTicked ?? false))
         {
             cards!.IsTicked = false;
+        }
+
+        if (changed?.Modifier is AddClassicRelicsCustomModeModifier && (addRelics?.IsTicked ?? false))
+        {
+            if (onlyRelics != null) onlyRelics.IsTicked = false;
+        }
+        else if ((changed?.Modifier is OnlyClassicRelicsCustomModeModifier || changed?.Modifier is ClassicRelicsCustomModeModifier)
+            && (onlyRelics?.IsTicked ?? false))
+        {
+            if (addRelics != null) addRelics.IsTicked = false;
+        }
+
+        if ((addRelics?.IsTicked ?? false) && (onlyRelics?.IsTicked ?? false))
+        {
+            onlyRelics!.IsTicked = false;
         }
 
         if (changed?.Modifier is ClassicColorlessCustomModeModifier && (colorless?.IsTicked ?? false))
@@ -339,7 +360,8 @@ internal static class CustomRunClassicOptionsRules
             return;
 
         var cards = Find<ClassicCardsCustomModeModifier>(tickboxes);
-        var relics = Find<ClassicRelicsCustomModeModifier>(tickboxes);
+        var relicsAdd = Find<AddClassicRelicsCustomModeModifier>(tickboxes);
+        var relicsOnly = Find<OnlyClassicRelicsCustomModeModifier>(tickboxes);
         var hybrid = Find<ClassicHybridCustomModeModifier>(tickboxes);
         var dedupe = Find<ClassicHybridDedupeCustomModeModifier>(tickboxes);
         var colorless = Find<ClassicColorlessCustomModeModifier>(tickboxes);
@@ -350,7 +372,7 @@ internal static class CustomRunClassicOptionsRules
         // Always show classic options for all characters, but only allow editing
         // from singleplayer/host. Clients stay read-only and follow host sync.
         var localCanEdit = CanLocalPlayerEdit(modifiersList);
-        foreach (var t in new[] { cards, relics, hybrid, dedupe, colorless, colorlessHybrid, colorlessDedupe, colorlessRewards })
+        foreach (var t in new[] { cards, relicsAdd, relicsOnly, hybrid, dedupe, colorless, colorlessHybrid, colorlessDedupe, colorlessRewards })
         {
             if (t == null) continue;
             if (localCanEdit)
@@ -380,6 +402,13 @@ internal static class CustomRunClassicOptionsRules
         if (hasHybrid && hasCards)
         {
             list.RemoveAll(m => m is ClassicCardsCustomModeModifier);
+        }
+
+        var hasAddRelics = list.Any(m => m is AddClassicRelicsCustomModeModifier);
+        var hasOnlyRelics = list.Any(m => m is OnlyClassicRelicsCustomModeModifier || m is ClassicRelicsCustomModeModifier);
+        if (hasAddRelics && hasOnlyRelics)
+        {
+            list.RemoveAll(m => m is OnlyClassicRelicsCustomModeModifier || m is ClassicRelicsCustomModeModifier);
         }
 
         if (!list.Any(m => m is ClassicHybridCustomModeModifier))
