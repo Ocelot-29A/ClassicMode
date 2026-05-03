@@ -15,6 +15,7 @@ public sealed class ClassicSilentRelicPool : RelicPoolModel
         [
             // Starter
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.RingOfTheSnake>(),
+            ModelDb.Relic<RingOfTheSerpent>(),
             // Uncommon
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.Tingsha>(),
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.OrnamentalFan>(),

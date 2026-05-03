@@ -18,5 +18,7 @@
     "CLASSIC_CUSTOM_COLORLESS_DEDUPE.title": "无色同名去重",
     "CLASSIC_CUSTOM_COLORLESS_DEDUPE.description": "仅在混合无色牌开启时生效：同名内容只保留二代版本。",
     "CLASSIC_CUSTOM_COLORLESS_REWARDS.title": "无色卡牌奖励",
-    "CLASSIC_CUSTOM_COLORLESS_REWARDS.description": "战斗后的卡牌奖励中可出现无色牌。"
+    "CLASSIC_CUSTOM_COLORLESS_REWARDS.description": "战斗后的卡牌奖励中可出现无色牌。",
+    "CLASSIC_CUSTOM_REPLACE_ANCIENTS.title": "替换先古之民",
+    "CLASSIC_CUSTOM_REPLACE_ANCIENTS.description": "强制将 1进2 与 2进3 的先古之民替换为达弗；达弗改为提供 3 个随机不重复、未获取的一代 Boss 遗物。"
 }

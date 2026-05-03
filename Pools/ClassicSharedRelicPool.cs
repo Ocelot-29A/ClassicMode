@@ -44,6 +44,8 @@ public sealed class ClassicSharedRelicPool : RelicPoolModel
             ModelDb.Relic<TurnipRelic>(),
             ModelDb.Relic<ThreadAndNeedleRelic>(),
             ModelDb.Relic<ToriiRelic>(),
+            ModelDb.Relic<SacredBarkRelic>(),
+            ModelDb.Relic<SlaversCollarRelic>(),
 
             // Shop
             ModelDb.Relic<FrozenEyeRelic>(),
@@ -52,6 +54,12 @@ public sealed class ClassicSharedRelicPool : RelicPoolModel
             ModelDb.Relic<ClockworkSouvenirRelic>(),
             ModelDb.Relic<OrangePelletsRelic>(),
             ModelDb.Relic<PrismaticShardRelic>(),
+            ModelDb.Relic<CoffeeDripperRelic>(),
+            ModelDb.Relic<CursedKeyRelic>(),
+            ModelDb.Relic<FusionHammerRelic>(),
+            ModelDb.Relic<BustedCrownRelic>(),
+            ModelDb.Relic<RunicDomeRelic>(),
+            ModelDb.Relic<TinyHouseRelic>(),
         ];
     }
 }

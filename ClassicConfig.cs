@@ -8,6 +8,10 @@ public static class ClassicConfig
 {
     private static readonly string ConfigPath = Path.Combine(
         Path.GetDirectoryName(typeof(ClassicConfig).Assembly.Location)!,
+        "classic_config.cfg");
+
+    private static readonly string LegacyConfigPath = Path.Combine(
+        Path.GetDirectoryName(typeof(ClassicConfig).Assembly.Location)!,
         "classic_config.json");
 
     private static bool _classicCards;
@@ -20,6 +24,7 @@ public static class ClassicConfig
     private static bool _classicColorlessDedupe;
     private static bool _colorlessCardRewards;
     private static bool _markClassicCardOrigin;
+    private static bool _replaceAncientsWithDarv;
 
     // Every pool-affecting toggle invalidates ModelDb's lazy `_allCards` /
     // `_allCardPools` / `_allCharacterCardPools` / relic equivalents on
@@ -176,13 +181,29 @@ public static class ClassicConfig
         }
     }
 
+    /// <summary>
+    /// When true, force Act2/Act3 ancient encounters to use Darv and replace
+    /// Darv options with STS1 boss-relic picks.
+    /// </summary>
+    public static bool ReplaceAncientsWithDarv
+    {
+        get => _replaceAncientsWithDarv;
+        set
+        {
+            if (_replaceAncientsWithDarv == value) return;
+            _replaceAncientsWithDarv = value;
+            Save();
+        }
+    }
+
     public static void Load()
     {
         try
         {
-            if (File.Exists(ConfigPath))
+            var resolvedPath = File.Exists(ConfigPath) ? ConfigPath : LegacyConfigPath;
+            if (File.Exists(resolvedPath))
             {
-                var json = File.ReadAllText(ConfigPath);
+                var json = File.ReadAllText(resolvedPath);
                 var data = JsonSerializer.Deserialize<ConfigData>(json);
                 if (data != null)
                 {
@@ -196,8 +217,23 @@ public static class ClassicConfig
                     _classicColorlessDedupe = data.ClassicColorlessDedupe;
                     _colorlessCardRewards = data.ColorlessCardRewards;
                     _markClassicCardOrigin = data.MarkClassicCardOrigin;
+                    _replaceAncientsWithDarv = data.ReplaceAncientsWithDarv;
                 }
                 Log.Info($"[ClassicMode] Config loaded: Cards={_classicCards}, AddRelics={_addClassicRelics}, OnlyRelics={_onlyClassicRelics}, HybridCards={_classicHybrid}, Dedupe={_hybridDedupe}, ColorlessClassic={_classicColorless}, ColorlessHybrid={_classicColorlessHybrid}, ColorlessDedupe={_classicColorlessDedupe}, ColorlessRewards={_colorlessCardRewards}, MarkSTS1={_markClassicCardOrigin}");
+
+                // Migrate legacy filename so ModManager doesn't mistake it for a manifest.
+                if (resolvedPath == LegacyConfigPath)
+                {
+                    Save();
+                    try
+                    {
+                        File.Delete(LegacyConfigPath);
+                    }
+                    catch
+                    {
+                        // Non-fatal; keep running even if old file cannot be removed.
+                    }
+                }
             }
         }
         catch (Exception ex)
@@ -222,7 +258,8 @@ public static class ClassicConfig
                 ClassicColorlessHybrid = _classicColorlessHybrid,
                 ClassicColorlessDedupe = _classicColorlessDedupe,
                 ColorlessCardRewards = _colorlessCardRewards,
-                MarkClassicCardOrigin = _markClassicCardOrigin
+                MarkClassicCardOrigin = _markClassicCardOrigin,
+                ReplaceAncientsWithDarv = _replaceAncientsWithDarv
             };
             File.WriteAllText(ConfigPath, JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true }));
         }
@@ -246,5 +283,6 @@ public static class ClassicConfig
         public bool ClassicColorlessDedupe { get; set; }
         public bool ColorlessCardRewards { get; set; }
         public bool MarkClassicCardOrigin { get; set; }
+        public bool ReplaceAncientsWithDarv { get; set; }
     }
 }

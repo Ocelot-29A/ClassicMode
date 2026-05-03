@@ -18,5 +18,7 @@
     "CLASSIC_CUSTOM_COLORLESS_DEDUPE.title": "Colorless Dedupe",
     "CLASSIC_CUSTOM_COLORLESS_DEDUPE.description": "Hybrid Colorless only: remove same-name overlaps so STS2 versions win.",
     "CLASSIC_CUSTOM_COLORLESS_REWARDS.title": "Colorless Card Rewards",
-    "CLASSIC_CUSTOM_COLORLESS_REWARDS.description": "Colorless cards can appear in combat card rewards."
+    "CLASSIC_CUSTOM_COLORLESS_REWARDS.description": "Colorless cards can appear in combat card rewards.",
+    "CLASSIC_CUSTOM_REPLACE_ANCIENTS.title": "Replace Ancients With Darv",
+    "CLASSIC_CUSTOM_REPLACE_ANCIENTS.description": "Force Act2/Act3 ancient events to Darv; Darv offers 3 random unowned STS1 boss relics."
 }

@@ -12,18 +12,28 @@ internal static class ModelDbAllRelicPoolsPatch
     {
         if (__result == null)
             return;
-        if (!ClassicConfig.AddClassicRelics && !ClassicConfig.OnlyClassicRelics)
+
+        // Even without classic relic pool modes, ReplaceAncientsWithDarv can grant
+        // classic boss relics; they still need an owning pool for tooltip/prefix logic.
+        if (!ClassicConfig.AddClassicRelics && !ClassicConfig.OnlyClassicRelics && !ClassicConfig.ReplaceAncientsWithDarv)
             return;
 
-        RelicPoolModel classicShared = ModelDb.RelicPool<ClassicSharedRelicPool>();
         List<RelicPoolModel> pools = __result.ToList();
-        if (pools.Any(p => p.Id == classicShared.Id))
+        var classicPools = new RelicPoolModel[]
         {
-            __result = pools;
-            return;
+            ModelDb.RelicPool<ClassicSharedRelicPool>(),
+            ModelDb.RelicPool<ClassicIroncladRelicPool>(),
+            ModelDb.RelicPool<ClassicSilentRelicPool>(),
+            ModelDb.RelicPool<ClassicDefectRelicPool>(),
+        };
+
+        foreach (var pool in classicPools)
+        {
+            if (pools.Any(p => p.Id == pool.Id))
+                continue;
+            pools.Add(pool);
         }
 
-        pools.Add(classicShared);
         __result = pools;
     }
 }

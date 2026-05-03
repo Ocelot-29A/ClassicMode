@@ -24,7 +24,39 @@ internal static class UnlockStateRelicsDedupPatch
         {
             relics = relics
                 .Concat(ModelDb.RelicPool<SharedRelicPool>().AllRelics)
-                .Concat(ModelDb.RelicPool<ClassicSharedRelicPool>().AllRelics);
+                .Concat(ModelDb.RelicPool<ClassicSharedRelicPool>().AllRelics)
+                // Starter-upgrade classics used by Touch of Orobas in classic-only mode.
+                .Concat(
+                [
+                    ModelDb.Relic<RingOfTheSerpent>(),
+                    ModelDb.Relic<FrozenCore>(),
+                    ModelDb.Relic<BustedCrownRelic>(),
+                    ModelDb.Relic<CoffeeDripperRelic>(),
+                    ModelDb.Relic<CursedKeyRelic>(),
+                    ModelDb.Relic<FusionHammerRelic>(),
+                    ModelDb.Relic<RunicCubeRelic>(),
+                    ModelDb.Relic<RunicDomeRelic>(),
+                    ModelDb.Relic<SacredBarkRelic>(),
+                    ModelDb.Relic<SlaversCollarRelic>(),
+                    ModelDb.Relic<TinyHouseRelic>()
+                ]);
+        }
+        else if (ClassicConfig.ReplaceAncientsWithDarv)
+        {
+            // Darv replacement can award these relics even when classic relic pool
+            // modes are off; include them so encyclopedia/inspect treats them as unlocked.
+            relics = relics.Concat(
+            [
+                ModelDb.Relic<BustedCrownRelic>(),
+                ModelDb.Relic<CoffeeDripperRelic>(),
+                ModelDb.Relic<CursedKeyRelic>(),
+                ModelDb.Relic<FusionHammerRelic>(),
+                ModelDb.Relic<RunicCubeRelic>(),
+                ModelDb.Relic<RunicDomeRelic>(),
+                ModelDb.Relic<SacredBarkRelic>(),
+                ModelDb.Relic<SlaversCollarRelic>(),
+                ModelDb.Relic<TinyHouseRelic>()
+            ]);
         }
 
         var seen = new HashSet<ModelId>();

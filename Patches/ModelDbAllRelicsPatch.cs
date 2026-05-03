@@ -12,11 +12,35 @@ internal static class ModelDbAllRelicsPatch
     {
         if (__result == null)
             return;
-        if (!ClassicConfig.AddClassicRelics && !ClassicConfig.OnlyClassicRelics)
+
+        var includeClassicPools = ClassicConfig.AddClassicRelics || ClassicConfig.OnlyClassicRelics;
+        var includeDarvOnlySet = ClassicConfig.ReplaceAncientsWithDarv && !includeClassicPools;
+        if (!includeClassicPools && !includeDarvOnlySet)
             return;
 
-        __result = __result
-            .Concat(ModelDb.RelicPool<ClassicSharedRelicPool>().AllRelics)
+        IEnumerable<RelicModel> relics = __result;
+
+        if (includeClassicPools)
+        {
+            relics = relics.Concat(ModelDb.RelicPool<ClassicSharedRelicPool>().AllRelics);
+        }
+        else if (includeDarvOnlySet)
+        {
+            relics = relics.Concat(
+            [
+                ModelDb.Relic<BustedCrownRelic>(),
+                ModelDb.Relic<CoffeeDripperRelic>(),
+                ModelDb.Relic<CursedKeyRelic>(),
+                ModelDb.Relic<FusionHammerRelic>(),
+                ModelDb.Relic<RunicCubeRelic>(),
+                ModelDb.Relic<RunicDomeRelic>(),
+                ModelDb.Relic<SacredBarkRelic>(),
+                ModelDb.Relic<SlaversCollarRelic>(),
+                ModelDb.Relic<TinyHouseRelic>()
+            ]);
+        }
+
+        __result = relics
             .GroupBy(r => r.Id)
             .Select(g => g.First())
             .OrderBy(r => r.Id.Entry);

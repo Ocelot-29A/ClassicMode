@@ -23,6 +23,7 @@ internal static class CustomRunAddClassicOptionsPatch
         AppendIfMissing<ClassicColorlessHybridCustomModeModifier>(list);
         AppendIfMissing<ClassicColorlessDedupeCustomModeModifier>(list);
         AppendIfMissing<ColorlessCardRewardsCustomModeModifier>(list);
+        AppendIfMissing<ReplaceAncientsWithDarvCustomModeModifier>(list);
         AppendIfMissing<AddClassicRelicsCustomModeModifier>(list);
         AppendIfMissing<OnlyClassicRelicsCustomModeModifier>(list);
 
@@ -104,6 +105,7 @@ internal static class CustomRunClassicOptionsApplyToConfigPatch
         ClassicConfig.ClassicColorlessHybrid = normalized.Any(m => m is ClassicColorlessHybridCustomModeModifier);
         ClassicConfig.ClassicColorlessDedupe = normalized.Any(m => m is ClassicColorlessDedupeCustomModeModifier);
         ClassicConfig.ColorlessCardRewards = normalized.Any(m => m is ColorlessCardRewardsCustomModeModifier);
+        ClassicConfig.ReplaceAncientsWithDarv = normalized.Any(m => m is ReplaceAncientsWithDarvCustomModeModifier);
     }
 }
 
@@ -221,6 +223,7 @@ internal static class CustomRunClassicOptionsRules
         Find<ClassicColorlessHybridCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ClassicColorlessHybrid);
         Find<ClassicColorlessDedupeCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ClassicColorlessDedupe);
         Find<ColorlessCardRewardsCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ColorlessCardRewards);
+        Find<ReplaceAncientsWithDarvCustomModeModifier>(tickboxes)?.SetValue(ClassicConfig.ReplaceAncientsWithDarv);
     }
 
     public static void SyncLobbyFromTickboxesIfEditable(NCustomRunScreen screen, NCustomRunModifiersList list)
@@ -248,6 +251,7 @@ internal static class CustomRunClassicOptionsRules
         var colorlessHybrid = Find<ClassicColorlessHybridCustomModeModifier>(tickboxes);
         var colorlessDedupe = Find<ClassicColorlessDedupeCustomModeModifier>(tickboxes);
         var colorlessRewards = Find<ColorlessCardRewardsCustomModeModifier>(tickboxes);
+        var replaceAncients = Find<ReplaceAncientsWithDarvCustomModeModifier>(tickboxes);
 
         // Keep behavior aligned with character-select toggles:
         // the newly toggled master mode wins, and dedupe depends on Hybrid.
@@ -339,6 +343,13 @@ internal static class CustomRunClassicOptionsRules
             else
                 colorlessRewards.Enable();
         }
+        if (replaceAncients != null)
+        {
+            if (!localCanEdit)
+                replaceAncients.Disable();
+            else
+                replaceAncients.Enable();
+        }
     }
 
     public static bool IsClassicEligibleForLobby(NCustomRunScreen screen, CharacterModel character)
@@ -368,11 +379,12 @@ internal static class CustomRunClassicOptionsRules
         var colorlessHybrid = Find<ClassicColorlessHybridCustomModeModifier>(tickboxes);
         var colorlessDedupe = Find<ClassicColorlessDedupeCustomModeModifier>(tickboxes);
         var colorlessRewards = Find<ColorlessCardRewardsCustomModeModifier>(tickboxes);
+        var replaceAncients = Find<ReplaceAncientsWithDarvCustomModeModifier>(tickboxes);
 
         // Always show classic options for all characters, but only allow editing
         // from singleplayer/host. Clients stay read-only and follow host sync.
         var localCanEdit = CanLocalPlayerEdit(modifiersList);
-        foreach (var t in new[] { cards, relicsAdd, relicsOnly, hybrid, dedupe, colorless, colorlessHybrid, colorlessDedupe, colorlessRewards })
+        foreach (var t in new[] { cards, relicsAdd, relicsOnly, hybrid, dedupe, colorless, colorlessHybrid, colorlessDedupe, colorlessRewards, replaceAncients })
         {
             if (t == null) continue;
             if (localCanEdit)

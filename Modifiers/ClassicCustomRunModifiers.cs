@@ -147,3 +147,10 @@ public sealed class ColorlessCardRewardsCustomModeModifier : ClassicCustomModeMo
         return options.WithCardPools(mergedPools, options.CardPoolFilter);
     }
 }
+
+public sealed class ReplaceAncientsWithDarvCustomModeModifier : ClassicCustomModeModifierBase
+{
+    public override LocString Title => new("modifiers", "CLASSIC_CUSTOM_REPLACE_ANCIENTS.title");
+
+    public override LocString Description => new("modifiers", "CLASSIC_CUSTOM_REPLACE_ANCIENTS.description");
+}

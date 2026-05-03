@@ -15,6 +15,7 @@ public sealed class ClassicDefectRelicPool : RelicPoolModel
         [
             // Starter
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.CrackedCore>(),
+            ModelDb.Relic<FrozenCore>(),
             // Common
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.DataDisk>(),
             // Uncommon

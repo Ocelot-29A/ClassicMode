@@ -25,6 +25,7 @@ public sealed class ClassicIroncladRelicPool : RelicPoolModel
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.PaperKrane>(),
             ModelDb.Relic<ChampionBelt>(),
             ModelDb.Relic<MagicFlowerRelic>(),
+            ModelDb.Relic<RunicCubeRelic>(),
             // Shop
             ModelDb.Relic<MegaCrit.Sts2.Core.Models.Relics.Brimstone>(),
         ];
