@@ -123,45 +123,6 @@ public sealed class Unload_C : ClassicSilentCard
     }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// 4. FanOfKnives (STS2 collision -> FanOfKnives_C)
-//    1 cost, Attack, AllEnemies, 4 dmg ALL (7 upg). Draw 1.
-//    (STS1: not a Shiv card, it's AoE damage + draw)
-// ────────────────────────────────────────────────────────────────────────────
-// NOTE: In STS1 this is actually an Uncommon, not Rare. Placed here for completeness.
-// We'll put it in pool as uncommon via the pool.
-public sealed class FanOfKnives_C : ClassicSilentCard
-{
-    protected override IEnumerable<DynamicVar> CanonicalVars =>
-    [
-        new DamageVar(4m, ValueProp.Move),
-        new CardsVar(1)
-    ];
-
-    public FanOfKnives_C()
-        : base("fan_of_knives", 1, CardType.Attack, CardRarity.Uncommon, TargetType.AllEnemies)
-    {
-    }
-
-    protected override async Task OnPlay(PlayerChoiceContext choiceContext, CardPlay cardPlay)
-    {
-        ArgumentNullException.ThrowIfNull(CombatState);
-        await DamageCmd.Attack(DynamicVars.Damage.BaseValue).FromCard(this)
-            .TargetingAllOpponents(CombatState)
-            .WithHitFx("vfx/vfx_dagger_throw", null, "dagger_throw.mp3")
-            .SpawningHitVfxOnEachCreature()
-            .Execute(choiceContext);
-        await CardPileCmd.Draw(choiceContext, DynamicVars.Cards.BaseValue, Owner);
-    }
-
-    protected override void OnUpgrade()
-    {
-        DynamicVars.Damage.UpgradeValueBy(3m);
-    }
-
-}
-
-
 // ═══════════════════════════════════════════════════════════════════
 // SILENT RARE SKILLS (7)
 // ═══════════════════════════════════════════════════════════════════

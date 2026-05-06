@@ -123,7 +123,7 @@
   "TINY_CHEST_RELIC.description": "Every [blue]4[/blue]th ? room is a [gold]Treasure[/gold] room.",
   "TINY_CHEST_RELIC.flavor": "",
   "TINY_HOUSE_RELIC.title": "Tiny House",
-  "TINY_HOUSE_RELIC.description": "Upon pickup, obtain [blue]1[/blue] potion. \\n Gain [blue]{Gold}[/blue] [gold]Gold[/gold]. \\n Raise your Max HP by [blue]{MaxHp}[/blue]. \\n Obtain [blue]1[/blue] card. \\n Upgrade [blue]1[/blue] random card.",
+  "TINY_HOUSE_RELIC.description": "Upon pickup, obtain [blue]1[/blue] potion. Gain [blue]{Gold}[/blue] [gold]Gold[/gold]. Raise your Max HP by [blue]{MaxHp}[/blue]. Obtain [blue]1[/blue] card reward. Upgrade [blue]1[/blue] random card.",
   "TINY_HOUSE_RELIC.flavor": "\"A near perfect implementation of miniaturization. My finest work to date, but still not adequate.\" - The Architect",
   "TORII_RELIC.title": "Torii",
   "TORII_RELIC.description": "Whenever you would receive [blue]5[/blue] or less unblocked [gold]Attack[/gold] damage, reduce it to [blue]1[/blue].",
@@ -183,6 +183,6 @@
   "slaversCollar.description": "During Boss and Elite combats, gain {energyPrefix:energyIcons(1)} at the start of your turn.",
   "slaversCollar.flavor": "Rusty miserable chains.",
   "tinyHouse.title": "Tiny House",
-  "tinyHouse.description": "Upon pickup, obtain [blue]1[/blue] potion. \\n Gain [blue]{Gold}[/blue] [gold]Gold[/gold]. \\n Raise your Max HP by [blue]{MaxHp}[/blue]. \\n Obtain [blue]1[/blue] card. \\n Upgrade [blue]1[/blue] random card.",
+  "tinyHouse.description": "Upon pickup, obtain [blue]1[/blue] potion. Gain [blue]{Gold}[/blue] [gold]Gold[/gold]. Raise your Max HP by [blue]{MaxHp}[/blue]. Obtain [blue]1[/blue] card reward. Upgrade [blue]1[/blue] random card.",
   "tinyHouse.flavor": "\"A near perfect implementation of miniaturization. My finest work to date, but still not adequate.\" - The Architect"
 }

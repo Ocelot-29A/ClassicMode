@@ -126,8 +126,6 @@ _CARD_TYPE_TO_PORTRAIT_SUBDIR = {
 
 _PORTRAIT_SOURCE_BASENAME_OVERRIDES = {
     ("defect", "compiled_driver"): "compile_driver",
-    # FanOfKnives_C maps from STS1 "Die Die Die" in this project setup.
-    ("silent", "fan_of_knives"): "die_die_die",
 }
 
 # STS1 power icon import map:
@@ -785,10 +783,6 @@ _CUSTOM_CARD_LOC = {
             "NAME": "Burn+",
             "DESCRIPTION": "At the end of your turn, if this is in your [gold]Hand[/gold], take {Damage:diff()} damage."
         },
-        "FanOfKnives_C": {
-            "NAME": "Fan of Knives",
-            "DESCRIPTION": "Deal {Damage:diff()} damage to ALL enemies.\nDraw {Cards:diff()} card."
-        },
         "UltimateStrikeEvent_C": {
             "NAME": "Ultimate Strike",
             "DESCRIPTION": "Deal {Damage:diff()} damage."
@@ -802,10 +796,6 @@ _CUSTOM_CARD_LOC = {
         "HexaghostBurnPlus": {
             "NAME": "灼伤+",
             "DESCRIPTION": "在你的回合结束时，如果这张牌在你的[gold]手牌[/gold]中，你受到{Damage:diff()}点伤害。"
-        },
-        "FanOfKnives_C": {
-            "NAME": "万刃齐发",
-            "DESCRIPTION": "对所有敌人造成{Damage:diff()}点伤害。\n抽{Cards:diff()}张牌。"
         },
         "UltimateStrikeEvent_C": {
             "NAME": "究极打击",
@@ -1306,7 +1296,7 @@ _CUSTOM_RELIC_LOC = {
         },
         "TinyHouseRelic": {
             "NAME": "Tiny House",
-            "DESCRIPTION": "Upon pickup, obtain [blue]1[/blue] potion. \\n Gain [blue]{Gold}[/blue] [gold]Gold[/gold]. \\n Raise your Max HP by [blue]{MaxHp}[/blue]. \\n Obtain [blue]1[/blue] card. \\n Upgrade [blue]1[/blue] random card.",
+            "DESCRIPTION": "Upon pickup, obtain [blue]1[/blue] potion. Gain [blue]{Gold}[/blue] [gold]Gold[/gold]. Raise your Max HP by [blue]{MaxHp}[/blue]. Obtain [blue]1[/blue] card reward. Upgrade [blue]1[/blue] random card.",
             "FLAVOR": "\"A near perfect implementation of miniaturization. My finest work to date, but still not adequate.\" - The Architect"
         },
     },
@@ -1493,7 +1483,7 @@ _CUSTOM_RELIC_LOC = {
         },
         "TinyHouseRelic": {
             "NAME": "\u5c0f\u5c4b\u5b50",
-            "DESCRIPTION": "\u62fe\u8d77\u65f6\uff0c\u83b7\u5f97[blue]1[/blue]\u74f6\u836f\u6c34\u3002 \\n \u83b7\u5f97[blue]{Gold}[/blue][gold]\u91d1\u5e01[/gold]\u3002 \\n \u5c06\u4f60\u7684\u6700\u5927\u751f\u547d\u503c\u63d0\u5347[blue]{MaxHp}[/blue]\u3002 \\n \u83b7\u5f97[blue]1[/blue]\u5f20\u724c\u3002 \\n \u968f\u673a\u5347\u7ea7[blue]1[/blue]\u5f20\u724c\u3002",
+            "DESCRIPTION": "\u62fe\u8d77\u65f6\uff0c\u83b7\u5f97[blue]1[/blue]\u74f6\u836f\u6c34\u3002\u83b7\u5f97[blue]{Gold}[/blue][gold]\u91d1\u5e01[/gold]\u3002\u5c06\u4f60\u7684\u6700\u5927\u751f\u547d\u503c\u63d0\u5347[blue]{MaxHp}[/blue]\u3002\u83b7\u5f97[blue]1[/blue]\u6b21\u5361\u724c\u5956\u52b1\u3002\u968f\u673a\u5347\u7ea7[blue]1[/blue]\u5f20\u724c\u3002",
             "FLAVOR": "\u201c\u4e00\u9879\u8fd1\u4e4e\u5b8c\u7f8e\u7684\u5fae\u7f29\u5316\u5de5\u7a0b\u3002\u8fd9\u662f\u6211\u81f3\u4eca\u6700\u4f18\u79c0\u7684\u4f5c\u54c1\uff0c\u4f46\u4ecd\u7136\u8fdc\u8fdc\u4e0d\u591f\u3002\u201d\u2014\u2014\u5efa\u7b51\u5e08"
         },
     },

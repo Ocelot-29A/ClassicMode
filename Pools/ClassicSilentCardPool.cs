@@ -58,7 +58,6 @@ public sealed class ClassicSilentCardPool : CardPoolModel
             ModelDb.Card<EndlessAgony_C>(),
             ModelDb.Card<Eviscerate_C>(),
             ModelDb.Card<Finisher_C>(),
-            ModelDb.Card<FanOfKnives_C>(),
             ModelDb.Card<Flechettes_C>(),
             ModelDb.Card<GlassKnife_C>(),
             ModelDb.Card<HeelHook_C>(),

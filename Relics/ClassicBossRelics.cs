@@ -236,9 +236,11 @@ public sealed class TinyHouseRelic : ClassicRelic
         await PlayerCmd.GainGold(DynamicVars["Gold"].BaseValue, Owner);
         var potion = PotionFactory.CreateRandomPotionOutOfCombat(Owner, Owner.RunState.Rng.CombatPotionGeneration).ToMutable();
         await PotionCmd.TryToProcure(potion, Owner);
-        var card = CardFactory.CreateForReward(Owner, 1, CardCreationOptions.ForRoom(Owner, RoomType.Monster)).FirstOrDefault()?.Card;
-        if (card != null)
-            await CardPileCmd.Add(card, PileType.Deck);
+
+        // STS1 semantics: "obtain 1 card" means resolve a normal card reward pick once.
+        var cardReward = new CardReward(CardCreationOptions.ForRoom(Owner, RoomType.Monster), 3, Owner);
+        await RewardsCmd.OfferCustom(Owner, [cardReward]);
+
         var upgradable = Owner.Deck.Cards.Where(c => c.IsUpgradable).ToList();
         if (upgradable.Count > 0)
             CardCmd.Upgrade(Owner.RunState.Rng.Niche.NextItem(upgradable));

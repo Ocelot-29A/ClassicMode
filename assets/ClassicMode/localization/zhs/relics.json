@@ -123,7 +123,7 @@
   "TINY_CHEST_RELIC.description": "每[blue]4[/blue]个？房间的最后一个必是[gold]宝箱房[/gold]。",
   "TINY_CHEST_RELIC.flavor": "",
   "TINY_HOUSE_RELIC.title": "小屋子",
-  "TINY_HOUSE_RELIC.description": "拾起时，获得[blue]1[/blue]瓶药水。 \\n 获得[blue]{Gold}[/blue][gold]金币[/gold]。 \\n 将你的最大生命值提升[blue]{MaxHp}[/blue]。 \\n 获得[blue]1[/blue]张牌。 \\n 随机升级[blue]1[/blue]张牌。",
+  "TINY_HOUSE_RELIC.description": "拾起时，获得[blue]1[/blue]瓶药水。获得[blue]{Gold}[/blue][gold]金币[/gold]。将你的最大生命值提升[blue]{MaxHp}[/blue]。获得[blue]1[/blue]次卡牌奖励。随机升级[blue]1[/blue]张牌。",
   "TINY_HOUSE_RELIC.flavor": "“一项近乎完美的微缩化工程。这是我至今最优秀的作品，但仍然远远不够。”——建筑师",
   "TORII_RELIC.title": "鸟居",
   "TORII_RELIC.description": "每当你受到小于等于[blue]5[/blue]点的未被[gold]格挡[/gold][gold]攻击[/gold]伤害时，将伤害降低为[blue]1[/blue]。",
@@ -183,6 +183,6 @@
   "slaversCollar.description": "在Boss战与精英战中，你在每回合开始时获得{energyPrefix:energyIcons(1)}。",
   "slaversCollar.flavor": "锈蚀可憎的铁链。",
   "tinyHouse.title": "小屋子",
-  "tinyHouse.description": "拾起时，获得[blue]1[/blue]瓶药水。 \\n 获得[blue]{Gold}[/blue][gold]金币[/gold]。 \\n 将你的最大生命值提升[blue]{MaxHp}[/blue]。 \\n 获得[blue]1[/blue]张牌。 \\n 随机升级[blue]1[/blue]张牌。",
+  "tinyHouse.description": "拾起时，获得[blue]1[/blue]瓶药水。获得[blue]{Gold}[/blue][gold]金币[/gold]。将你的最大生命值提升[blue]{MaxHp}[/blue]。获得[blue]1[/blue]次卡牌奖励。随机升级[blue]1[/blue]张牌。",
   "tinyHouse.flavor": "“一项近乎完美的微缩化工程。这是我至今最优秀的作品，但仍然远远不够。”——建筑师"
 }
