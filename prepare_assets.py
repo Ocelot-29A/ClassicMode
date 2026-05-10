@@ -1558,13 +1558,13 @@ _RELIC_LOC_KEY_ALIASES = {
 # If not listed, class name is matched against STS1 keys using _normalize().
 _CUSTOM_RELIC_STS1_ID_OVERRIDES = {
     # Existing custom relics
-    "TheSpecimen": "TheSpecimen",
-    "ChampionBelt": "ChampionBelt",
+    "TheSpecimen": "The Specimen",
+    "ChampionBelt": "Champion Belt",
     "MarkOfPain": "Mark of Pain",
-    "WristBlade": "Wrist Blade",
-    "HoveringKite": "Hovering Kite",
+    "WristBlade": "WristBlade",
+    "HoveringKite": "HoveringKite",
     "RingOfTheSerpent": "Ring of the Serpent",
-    "FrozenCore": "Frozen Core",
+    "FrozenCore": "FrozenCore",
     "NuclearBattery": "Nuclear Battery",
     # Shared/common/uncommon/rare/shop relics
     "ClassicBronzeScales": "Bronze Scales",
