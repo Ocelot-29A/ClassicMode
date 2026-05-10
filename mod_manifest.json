@@ -1,7 +1,7 @@
 {
-  "pck_name": "ClassicMode",
-  "id": "ClassicMode",
-  "name": "Classic Mode",
+  "pck_name": "ClassicModeBeta",
+  "id": "ClassicModeBeta",
+  "name": "Classic Mode Beta",
   "author": "Boninall, Alriph",
   "description": "Play STS2 characters with STS1 card pools, relic pools, and boss content. Toggle Classic Cards, Classic Relics, and Classic Bosses independently on the character select screen.",
   "version": "0.1.7.3",

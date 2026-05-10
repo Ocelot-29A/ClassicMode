@@ -20,7 +20,7 @@ public static class ClassicBootstrap
         ClassicConfig.Load();
         ClassicModConfigBridge.DeferredRegister();
 
-        var harmony = new Harmony("boninall.classicmode");
+        var harmony = new Harmony("boninall.classicmode.beta");
         int applied = 0, failed = 0;
 
         foreach (var type in Assembly.GetExecutingAssembly().GetTypes())
@@ -32,16 +32,16 @@ public static class ClassicBootstrap
                 var processor = new PatchClassProcessor(harmony, type);
                 processor.Patch();
                 applied++;
-                Log.Info($"[ClassicMode] Patched: {type.Name}");
+                Log.Info($"[ClassicModeBeta] Patched: {type.Name}");
             }
             catch (Exception ex)
             {
                 failed++;
-                Log.Error($"[ClassicMode] Patch failed for {type.Name}: {ex.InnerException?.Message ?? ex.Message}");
+                Log.Error($"[ClassicModeBeta] Patch failed for {type.Name}: {ex.InnerException?.Message ?? ex.Message}");
             }
         }
 
-        Log.Info($"[ClassicMode] Harmony patches: {applied} applied, {failed} failed.");
-        Log.Info("[ClassicMode] Classic Mode initialized.");
+        Log.Info($"[ClassicModeBeta] Harmony patches: {applied} applied, {failed} failed.");
+        Log.Info("[ClassicModeBeta] Classic Mode Beta initialized.");
     }
 }

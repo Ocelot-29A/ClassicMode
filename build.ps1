@@ -46,7 +46,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$modName = "ClassicMode"
+$projectName = "ClassicMode"
+$modName = "ClassicModeBeta"
 $projectDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 # ---------------------------------------------------------------------------
@@ -111,7 +112,7 @@ See README.md for how to unpack Slay the Spire 1.
 # ---------------------------------------------------------------------------
 # Layout
 # ---------------------------------------------------------------------------
-$project = Join-Path $projectDir "$modName.csproj"
+$project = Join-Path $projectDir "$projectName.csproj"
 $outputRoot = Join-Path $projectDir "build"
 $outputDir = Join-Path $outputRoot $modName
 $buildDir = Join-Path $projectDir "bin\Release\net9.0"
