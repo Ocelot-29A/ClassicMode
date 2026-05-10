@@ -49,7 +49,7 @@ public sealed class MarkOfPain : ClassicRelic
         return amount + (decimal)DynamicVars.Energy.IntValue;
     }
 
-    public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, ICombatState combatState)
+    public override async Task BeforeHandDraw(Player player, PlayerChoiceContext choiceContext, CombatState combatState)
     {
         if (player != Owner || combatState.RoundNumber > 1) return;
 
@@ -58,7 +58,7 @@ public sealed class MarkOfPain : ClassicRelic
         for (int i = 0; i < woundCount; i++)
         {
             CardModel wound = combatState.CreateCard<Wound>(Owner);
-            await CardPileCmd.AddGeneratedCardToCombat(wound, PileType.Draw, null);
+            await CardPileCmd.AddGeneratedCardToCombat(wound, PileType.Draw, false);
         }
     }
 }
@@ -81,16 +81,16 @@ public sealed class ChampionBelt : ClassicRelic
         HoverTipFactory.FromPower<WeakPower>()
     ];
 
-    public override async Task AfterPowerAmountChanged(PlayerChoiceContext choiceContext, PowerModel power, decimal amount, Creature? applier, CardModel? cardSource)
+    public override async Task AfterPowerAmountChanged(PowerModel power, decimal amount, Creature? applier, CardModel? cardSource)
     {
-        _ = choiceContext;
+        _ = cardSource;
         if (power is VulnerablePower
             && applier == Owner.Creature
             && power.Owner != Owner.Creature
             && amount > 0)
         {
             Flash();
-            await PowerCmd.Apply<WeakPower>(choiceContext, power.Owner, 1m, Owner.Creature, null);
+            await PowerCmd.Apply<WeakPower>(new ThrowingPlayerChoiceContext(), power.Owner, 1m, Owner.Creature, null);
         }
     }
 }

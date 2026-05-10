@@ -553,7 +553,7 @@ public sealed class QuestionCardRelic : ClassicRelic
     {
         if (player != Owner)
             return false;
-        if (!creationOptions.Flags.HasFlag(CardCreationFlags.IsCardReward))
+        if (creationOptions.Source != CardCreationSource.Encounter)
             return false;
 
         HashSet<ModelId> existingIds = options.Select(o => o.originalCard.Id).ToHashSet();
@@ -765,7 +765,7 @@ public sealed class IncenseBurnerRelic : ClassicRelic
         }
     }
 
-    public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, ICombatState combatState)
+    public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, CombatState combatState)
     {
         if (side == Owner.Creature.Side && combatState.RoundNumber <= 1)
             TurnsElapsed = 0;
@@ -840,7 +840,7 @@ public sealed class CalipersRelic : ClassicRelic
         return base.ShouldClearBlock(creature);
     }
 
-    public override async Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, ICombatState combatState)
+    public override async Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, CombatState combatState)
     {
         if (side != Owner.Creature.Side)
             return;
@@ -923,7 +923,7 @@ public sealed class DeadBranchRelic : ClassicRelic
             return;
 
         Flash();
-        await CardPileCmd.AddGeneratedCardToCombat(generated.Card, PileType.Hand, Owner);
+        await CardPileCmd.AddGeneratedCardToCombat(generated.Card, PileType.Hand, true);
     }
 }
 
@@ -1143,7 +1143,7 @@ public sealed class OrangePelletsRelic : ClassicRelic
 
     public override RelicRarity Rarity => RelicRarity.Shop;
 
-    public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, ICombatState combatState)
+    public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, CombatState combatState)
     {
         if (side != Owner.Creature.Side)
             return Task.CompletedTask;
@@ -1192,7 +1192,7 @@ public sealed class PrismaticShardRelic : ClassicRelic
             return options;
         if (options.Flags.HasFlag(CardCreationFlags.NoCardPoolModifications))
             return options;
-        if (!options.Flags.HasFlag(CardCreationFlags.IsCardReward))
+        if (options.Source != CardCreationSource.Encounter)
             return options;
         if (options.CustomCardPool != null)
             return options;

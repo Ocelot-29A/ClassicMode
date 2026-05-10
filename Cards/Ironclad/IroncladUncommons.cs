@@ -332,7 +332,7 @@ public sealed class RecklessCharge_C : ClassicIroncladCard
             .WithHitFx("vfx/vfx_attack_blunt", null, "blunt_attack.mp3")
             .Execute(choiceContext);
         var dazed = CombatState.CreateCard<MegaCrit.Sts2.Core.Models.Cards.Dazed>(Owner);
-        await CardPileCmd.AddGeneratedCardToCombat(dazed, PileType.Draw, Owner, CardPilePosition.Random);
+        await CardPileCmd.AddGeneratedCardToCombat(dazed, PileType.Draw, true, CardPilePosition.Random);
     }
 
     protected override void OnUpgrade()
@@ -608,7 +608,7 @@ public sealed class DualWield_C : ClassicIroncladCard
         for (int i = 0; i < DynamicVars.Cards.IntValue; i++)
         {
             var clone = selection.CreateClone();
-            await CardPileCmd.AddGeneratedCardToCombat(clone, PileType.Hand, Owner);
+            await CardPileCmd.AddGeneratedCardToCombat(clone, PileType.Hand, true);
         }
     }
 
@@ -721,7 +721,7 @@ public sealed class InfernalBlade_C : ClassicIroncladCard
         if (generated != null)
         {
             generated.SetToFreeThisTurn();
-            await CardPileCmd.AddGeneratedCardToCombat(generated, PileType.Hand, Owner);
+            await CardPileCmd.AddGeneratedCardToCombat(generated, PileType.Hand, true);
         }
     }
 
@@ -783,7 +783,7 @@ public sealed class PowerThrough_C : ClassicIroncladCard
         for (int i = 0; i < 2; i++)
         {
             var wound = CombatState.CreateCard<MegaCrit.Sts2.Core.Models.Cards.Wound>(Owner);
-            await CardPileCmd.AddGeneratedCardToCombat(wound, PileType.Hand, Owner);
+            await CardPileCmd.AddGeneratedCardToCombat(wound, PileType.Hand, true);
         }
         await CreatureCmd.GainBlock(Owner.Creature, DynamicVars.Block, cardPlay);
     }
