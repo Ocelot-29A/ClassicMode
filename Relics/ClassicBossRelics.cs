@@ -164,22 +164,19 @@ public sealed class SacredBarkRelic : ClassicRelic
         return Task.CompletedTask;
     }
 
-    public override Task AfterPotionUsed(PotionModel potion, Creature? target)
+    public override async Task AfterPotionUsed(PotionModel potion, Creature? target)
     {
         if (potion.Owner == Owner)
         {
+            // 103 has no ModifyEnergyGain hook, so we explicitly mirror Sacred Bark's
+            // energy doubling for energy-granting potions.
+            if (potion is EnergyPotion or CureAll or RadiantTincture)
+                await PlayerCmd.GainEnergy(potion.DynamicVars.Energy.BaseValue, Owner);
+
             IsApplyingPotionEffects = false;
             IsCardChoicePotion = false;
         }
-        return Task.CompletedTask;
-    }
-
-    public override decimal ModifyEnergyGain(Player player, decimal amount)
-    {
-        if (!IsApplyingPotionEffects) return amount;
-        if (player != Owner) return amount;
-        if (amount <= 0m) return amount;
-        return amount * 2m;
+        _ = target;
     }
 
     public override decimal ModifyPowerAmountGiven(PowerModel power, Creature giver, decimal amount, Creature? target, CardModel? cardSource)
@@ -190,10 +187,10 @@ public sealed class SacredBarkRelic : ClassicRelic
         return amount * 2m;
     }
 
-    public override async Task AfterCardGeneratedForCombat(CardModel card, Player? creator)
+    public override async Task AfterCardGeneratedForCombat(CardModel card, bool addedByPlayer)
     {
         if (!IsApplyingPotionEffects || !IsCardChoicePotion) return;
-        if (creator != Owner) return;
+        if (!addedByPlayer) return;
         if (card.Owner != Owner || card.Pile?.Type != PileType.Hand) return;
         if (IsDuplicatingGeneratedCard) return;
 
@@ -201,7 +198,7 @@ public sealed class SacredBarkRelic : ClassicRelic
         try
         {
             var dupe = card.CreateClone();
-            await CardPileCmd.AddGeneratedCardToCombat(dupe, PileType.Hand, Owner);
+            await CardPileCmd.AddGeneratedCardToCombat(dupe, PileType.Hand, true);
         }
         finally
         {
