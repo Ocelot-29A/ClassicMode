@@ -12,8 +12,7 @@ internal static class PowerCmdShim
     public static Task<IReadOnlyList<T>> Apply<T>(PlayerChoiceContext choiceContext, IEnumerable<Creature> targets,
         decimal amount, Creature? applier, CardModel? cardSource, bool silent = false) where T : PowerModel
     {
-        _ = choiceContext;
-        return MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<T>(targets, amount, applier, cardSource, silent);
+        return MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<T>(choiceContext, targets, amount, applier, cardSource, silent);
     }
 
     public static Task<IReadOnlyList<T>> Apply<T>(IEnumerable<Creature> targets, decimal amount,
@@ -25,8 +24,7 @@ internal static class PowerCmdShim
     public static Task<T?> Apply<T>(PlayerChoiceContext choiceContext, Creature target, decimal amount,
         Creature? applier, CardModel? cardSource, bool silent = false) where T : PowerModel
     {
-        _ = choiceContext;
-        return MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<T>(target, amount, applier, cardSource, silent);
+        return MegaCrit.Sts2.Core.Commands.PowerCmd.Apply<T>(choiceContext, target, amount, applier, cardSource, silent);
     }
 
     public static Task<T?> Apply<T>(Creature target, decimal amount, Creature? applier,
@@ -38,8 +36,7 @@ internal static class PowerCmdShim
     public static Task Apply(PlayerChoiceContext choiceContext, PowerModel power, Creature target, decimal amount,
         Creature? applier, CardModel? cardSource, bool silent = false)
     {
-        _ = choiceContext;
-        return MegaCrit.Sts2.Core.Commands.PowerCmd.Apply(power, target, amount, applier, cardSource, silent);
+        return MegaCrit.Sts2.Core.Commands.PowerCmd.Apply(choiceContext, power, target, amount, applier, cardSource, silent);
     }
 
     public static Task Apply(PowerModel power, Creature target, decimal amount, Creature? applier,

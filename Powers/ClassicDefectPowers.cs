@@ -201,7 +201,7 @@ public sealed class StaticDischargePower_C : PowerModel
             return;
         if (dealer == null || dealer.Side == base.Owner.Side)
             return;
-        if (!props.HasFlag(ValueProp.Move) || props.HasFlag(ValueProp.Unpowered))
+        if (!props.IsPoweredAttack())
             return;
 
         Flash();
@@ -220,7 +220,7 @@ public sealed class CreativeAiPower_C : PowerModel
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    public override async Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    public override async Task AfterSideTurnStart(CombatSide side, ICombatState combatState)
     {
         if (side != base.Owner.Side)
             return;
@@ -239,7 +239,7 @@ public sealed class CreativeAiPower_C : PowerModel
                 base.Owner.Player.RunState.Rng.CombatCardGeneration).FirstOrDefault();
             if (card != null)
             {
-                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, true);
+                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
             }
         }
     }
@@ -253,7 +253,7 @@ public sealed class HelloWorldPower_C : PowerModel
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    public override async Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    public override async Task AfterSideTurnStart(CombatSide side, ICombatState combatState)
     {
         if (side != base.Owner.Side)
             return;
@@ -272,7 +272,7 @@ public sealed class HelloWorldPower_C : PowerModel
                 base.Owner.Player.RunState.Rng.CombatCardGeneration).FirstOrDefault();
             if (card != null)
             {
-                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, true);
+                await CardPileCmd.AddGeneratedCardToCombat(card, PileType.Hand, base.Owner.Player);
             }
         }
     }
@@ -307,7 +307,7 @@ public sealed class MachineLearningPower_C : PowerModel
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    public override async Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    public override async Task AfterSideTurnStart(CombatSide side, ICombatState combatState)
     {
         if (side != base.Owner.Side)
             return;
@@ -344,7 +344,7 @@ public sealed class LoopPower_C : PowerModel
     public override PowerType Type => PowerType.Buff;
     public override PowerStackType StackType => PowerStackType.Counter;
 
-    public override async Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    public override async Task AfterSideTurnStart(CombatSide side, ICombatState combatState)
     {
         if (side != base.Owner.Side)
             return;
@@ -433,7 +433,7 @@ public sealed class EchoFormPower_C : PowerModel
         set { AssertMutable(); _doublesRemaining = value; }
     }
 
-    public override Task AfterSideTurnStart(CombatSide side, CombatState combatState)
+    public override Task AfterSideTurnStart(CombatSide side, ICombatState combatState)
     {
         if (side == base.Owner.Side)
         {
