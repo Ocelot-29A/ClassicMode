@@ -70,7 +70,7 @@ public sealed class Feed_C : ClassicIroncladCard
             .WithHitFx("vfx/vfx_bite", null, "blunt_attack.mp3")
             .Execute(choiceContext);
 
-        if (shouldTriggerFatal && result.Results.Any(r => r.WasTargetKilled))
+        if (shouldTriggerFatal && result.Results.SelectMany(group => group).Any(r => r.WasTargetKilled))
         {
             decimal maxHpGain = DynamicVars["MaxHp"].BaseValue;
             await CreatureCmd.GainMaxHp(Owner.Creature, maxHpGain);
@@ -180,7 +180,7 @@ public sealed class Reaper_C : ClassicIroncladCard
             .SpawningHitVfxOnEachCreature()
             .Execute(choiceContext);
 
-        int totalHeal = result.Results.Sum(r => r.UnblockedDamage);
+        int totalHeal = result.Results.SelectMany(group => group).Sum(r => r.UnblockedDamage);
         if (totalHeal > 0)
         {
             await CreatureCmd.Heal(Owner.Creature, totalHeal);

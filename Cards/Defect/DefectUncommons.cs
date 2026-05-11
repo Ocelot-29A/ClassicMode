@@ -261,7 +261,7 @@ public sealed class Sunder_C : ClassicDefectCard
             .Targeting(cardPlay.Target)
             .WithHitFx("vfx/vfx_heavy_blunt", null, "heavy_attack.mp3")
             .Execute(choiceContext);
-        if (result.Results.Any(r => r.WasTargetKilled))
+        if (result.Results.SelectMany(group => group).Any(r => r.WasTargetKilled))
         {
             await PlayerCmd.GainEnergy(DynamicVars.Energy.IntValue, Owner);
         }

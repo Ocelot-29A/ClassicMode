@@ -596,7 +596,7 @@ public sealed class SingingBowlRelic : ClassicRelic
                 Flash();
                 await CreatureCmd.GainMaxHp(player.Creature, 2m);
             },
-            PostAlternateCardRewardAction.DismissScreenAndRemoveReward);
+            PostAlternateCardRewardAction.EndSelectionAndCompleteReward);
 
         int skipIndex = alternatives.FindIndex(a =>
             string.Equals(a.OptionId, "SKIP", StringComparison.OrdinalIgnoreCase));
