@@ -1,4 +1,5 @@
 using HarmonyLib;
+using MegaCrit.Sts2.Core.Combat;
 using MegaCrit.Sts2.Core.Commands;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 
@@ -9,7 +10,7 @@ internal static class MagicFlowerHealPatch
 {
     static void Prefix(Creature creature, ref decimal amount)
     {
-        if (amount <= 0 || creature?.CombatState == null)
+        if (creature?.Player == null || amount <= 0m || !CombatManager.Instance.IsInProgress)
             return;
 
         MagicFlowerRelic? relic = creature.Player?.GetRelic<MagicFlowerRelic>();

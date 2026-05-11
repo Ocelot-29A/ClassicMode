@@ -589,14 +589,36 @@ public sealed class SingingBowlRelic : ClassicRelic
         if (player != Owner)
             return false;
 
-        alternatives.Add(new CardRewardAlternative(
+        CardRewardAlternative bowlAlternative = new CardRewardAlternative(
             GainMaxHpAlternativeKey,
             async () =>
             {
                 Flash();
                 await CreatureCmd.GainMaxHp(player.Creature, 2m);
             },
-            PostAlternateCardRewardAction.DismissScreenAndRemoveReward));
+            PostAlternateCardRewardAction.DismissScreenAndRemoveReward);
+
+        int skipIndex = alternatives.FindIndex(a =>
+            string.Equals(a.OptionId, "SKIP", StringComparison.OrdinalIgnoreCase));
+
+        // Core UI supports at most two alternatives. If we are already at cap,
+        // prefer replacing Skip so Singing Bowl can still appear with Pael's Wing.
+        if (alternatives.Count >= 2)
+        {
+            if (skipIndex < 0)
+                return false;
+
+            alternatives[skipIndex] = bowlAlternative;
+            return true;
+        }
+
+        if (skipIndex >= 0)
+        {
+            alternatives[skipIndex] = bowlAlternative;
+            return true;
+        }
+
+        alternatives.Add(bowlAlternative);
 
         return true;
     }
