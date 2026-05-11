@@ -90,7 +90,7 @@ public sealed class HoveringKite : ClassicRelic
         set { AssertMutable(); _triggeredThisTurn = value; }
     }
 
-    public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, CombatState combatState)
+    public override Task BeforeSideTurnStart(PlayerChoiceContext choiceContext, CombatSide side, ICombatState combatState)
     {
         if (side == Owner.Creature.Side)
             TriggeredThisTurn = false;
