@@ -92,7 +92,10 @@ def write_directory(
     file_base: int,
 ):
     handle.write(struct.pack("<I", len(files)))
-    add_res_prefix = not (engine_major == 4 and engine_minor >= 4)
+    # Always store canonical res:// paths in the PCK directory.
+    # STS2 103 expects resource lookups in this form (e.g. ResourceLoader.Exists("res://..."))
+    # for both localization merge and runtime icon loading.
+    add_res_prefix = True
     for entry in files:
         pack_path = entry.pack_path
         if add_res_prefix and not pack_path.startswith("res://"):

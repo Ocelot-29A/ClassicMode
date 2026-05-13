@@ -50,6 +50,8 @@ function Find-GodotBin {
 
   # Common install locations (newest first)
   $candidates += @(
+    "G:\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe",
+    "G:\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64.exe",
     "D:\software\godot\Godot_v4.5.1-stable_mono_win64\Godot_v4.5.1-stable_mono_win64_console.exe",
     "C:\Godot\Godot_v4.5.1-stable_mono_win64.exe",
     "C:\Godot\Godot_v4.5-stable_mono_win64.exe",
