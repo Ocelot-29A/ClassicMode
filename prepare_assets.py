@@ -23,6 +23,93 @@ import struct
 import sys
 import difflib
 
+
+_DEFAULT_MOD_ASSET_ROOT = "ClassicMode"
+
+
+def resolve_mod_asset_root(project_dir: str) -> str:
+    """Resolve mod asset root folder from mod_manifest.json (pck_name/id)."""
+    manifest_path = os.path.join(project_dir, "mod_manifest.json")
+    if not os.path.isfile(manifest_path):
+        return _DEFAULT_MOD_ASSET_ROOT
+
+    try:
+        with open(manifest_path, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+    except Exception:
+        return _DEFAULT_MOD_ASSET_ROOT
+
+    candidate = manifest.get("pck_name") or manifest.get("id")
+    if isinstance(candidate, str) and candidate.strip():
+        return candidate.strip()
+    return _DEFAULT_MOD_ASSET_ROOT
+
+
+def cleanup_legacy_mod_localization(project_dir: str, mod_asset_root: str):
+    """Delete stale localization trees from previous mod root names."""
+    assets_root = os.path.join(project_dir, "assets")
+    if not os.path.isdir(assets_root):
+        return
+
+    for entry in os.listdir(assets_root):
+        if entry in ("images", "scenes"):
+            continue
+        if entry == mod_asset_root:
+            continue
+
+        loc_dir = os.path.join(assets_root, entry, "localization")
+        if os.path.isdir(loc_dir):
+            shutil.rmtree(loc_dir)
+            print(f"  Removed stale localization tree: assets/{entry}/localization")
+
+
+def ensure_static_localization_tables(project_dir: str, mod_asset_root: str):
+    """Ensure static localization tables exist under the active mod root."""
+    static_files = [
+        "card_reward_ui.json",
+        "modifiers.json",
+        "monsters.json",
+        "rest_site_ui.json",
+    ]
+    langs = ["eng", "zhs"]
+
+    target_root = os.path.join(project_dir, "assets", mod_asset_root, "localization")
+
+    source_roots = []
+    # 1) Legacy in-project root (before beta rename)
+    source_roots.append(os.path.join(project_dir, "assets", "ClassicMode", "localization"))
+    # 2) Stable sibling project root
+    source_roots.append(
+        os.path.normpath(
+            os.path.join(project_dir, "..", "ClassicMode", "assets", "ClassicMode", "localization")
+        )
+    )
+
+    copied = 0
+    for lang in langs:
+        os.makedirs(os.path.join(target_root, lang), exist_ok=True)
+        for filename in static_files:
+            dst = os.path.join(target_root, lang, filename)
+            if os.path.isfile(dst):
+                continue
+
+            src_found = None
+            for src_root in source_roots:
+                src = os.path.join(src_root, lang, filename)
+                if os.path.isfile(src):
+                    src_found = src
+                    break
+
+            if src_found is None:
+                print(f"  WARNING: missing static localization table {lang}/{filename}")
+                continue
+
+            shutil.copy2(src_found, dst)
+            copied += 1
+
+    if copied > 0:
+        print(f"  Restored {copied} static localization table(s) for {mod_asset_root}.")
+
 # ---------------------------------------------------------------------------
 # Godot .ctex / .import generation (same approach as Watcher's prepare_assets.py)
 # ---------------------------------------------------------------------------
@@ -602,7 +689,7 @@ def copy_localization(project_dir: str, pck_root: str):
             shutil.copy2(src, dst)
 
 
-def generate_ctex_for_images(pck_root: str):
+def generate_ctex_for_images(pck_root: str, mod_asset_root: str):
     """
     Generate .import + .ctex files for all PNGs in the PCK source.
     This enables Godot's ResourceLoader to find mod textures.
@@ -628,7 +715,7 @@ def generate_ctex_for_images(pck_root: str):
             ctex_path = os.path.join(root, ctex_name)
 
             # .import file for the .ctex
-            import_res = f"res://ClassicMode/_imported/{rel_path}.ctex"
+            import_res = f"res://{mod_asset_root}/_imported/{rel_path}.ctex"
 
             if write_webp_ctex(src_path, ctex_path):
                 write_import_file(res_path, import_res, root)
@@ -2083,12 +2170,12 @@ def _find_relic_classes(project_dir):
     return sorted(set(classes))
 
 
-def generate_localization(sts1_root, project_dir):
+def generate_localization(sts1_root, project_dir, mod_asset_root):
     """Generate STS2-format localization files from STS1 data.
 
     STS2 mod localization format:
     - Flat dictionary: {"MODEL_ID.title": "Name", "MODEL_ID.description": "Text"}
-    - Files placed at ClassicMode/localization/{lang}/ (mod-specific path, NOT localization/)
+    - Files placed at <mod_asset_root>/localization/{lang}/ (mod-specific path, NOT localization/)
     - Card vars use :diff() suffix for upgrade display
     """
     langs = ["eng", "zhs"]
@@ -2108,8 +2195,8 @@ def generate_localization(sts1_root, project_dir):
     for lang in langs:
         cards_src = os.path.join(sts1_root, "localization", lang, "cards.json")
 
-        # Output to mod-specific path: assets/ClassicMode/localization/{lang}/
-        out_dir = os.path.join(project_dir, "assets", "ClassicMode", "localization", lang)
+        # Output to mod-specific path: assets/<mod_asset_root>/localization/{lang}/
+        out_dir = os.path.join(project_dir, "assets", mod_asset_root, "localization", lang)
         os.makedirs(out_dir, exist_ok=True)
 
         # --- Cards ---
@@ -2367,6 +2454,7 @@ def main():
 
     project_dir = sys.argv[1]
     pck_root = sys.argv[2]
+    mod_asset_root = resolve_mod_asset_root(project_dir)
 
     # STS1 unpacked assets root:
     #   1. explicit 3rd CLI argument
@@ -2389,10 +2477,16 @@ def main():
         sys.exit(1)
 
     print("[ClassicMode] Preparing assets...")
+    print(f"  Mod asset root: {mod_asset_root}")
+
+    cleanup_legacy_mod_localization(project_dir, mod_asset_root)
 
     # 1. Generate localization from STS1 data
     print("  Generating localization...")
-    generate_localization(sts1_root, project_dir)
+    generate_localization(sts1_root, project_dir, mod_asset_root)
+
+    # 1.5 Ensure static localization tables that are not generated from STS1.
+    ensure_static_localization_tables(project_dir, mod_asset_root)
 
     # 2. Copy localization + other assets to PCK
     print("  Copying localization files...")
